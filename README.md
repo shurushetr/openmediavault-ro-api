@@ -33,9 +33,11 @@ By default, OpenMediaVault's web RPC gateway (`/rpc.php` -> `OMV\Rpc\Proxy\Json:
 ### Step 1: Install the Plugin in OpenMediaVault 7 / 8 (100% Web UI)
 
 1. In the OpenMediaVault Web UI, go to **`System` -> `Plugins`**, search for **`openmediavault-apt`**, install it if not already installed, and apply the yellow configuration banner.
-2. Go to **`System` -> `APT` -> `Repositories`** and click **`Create`** (`+`):
-   - **URI / URL:** `https://shurushetr.github.io/openmediavault-ro-api`
-   - **Distribution / Suites:** `sandworm`
+2. Go to **`System` -> `Update Management` -> `Settings` -> `Other Software`** and click **`Create`** (`+`):
+   - **Enabled:** Checked
+   - **Types:** `deb`
+   - **URIs:** `https://shurushetr.github.io/openmediavault-ro-api`
+   - **Suites:** `sandworm`
    - **Components:** `main`
    - **GPG Key:** Paste the armored public key from [`openmediavault-ro-api.asc`](https://shurushetr.github.io/openmediavault-ro-api/openmediavault-ro-api.asc)
 3. Click **Save** and apply the yellow configuration banner.

@@ -415,7 +415,7 @@ def classify_omv_error(code: Any, message: str, section: str) -> Dict[str, Any]:
             "http_or_rpc_code": code,
             "remediation": (
                 "The `openmediavault-ro-api` plugin (`/ro-api.php`) is not installed on this OpenMediaVault host yet. "
-                "Add the plugin APT repository via `openmediavault-apt` (`System -> APT -> Repositories`) and install "
+                "Add the plugin APT repository via `openmediavault-apt` (`System -> Update Management -> Settings -> Other Software`) and install "
                 "`openmediavault-ro-api` in `System -> Plugins`, or install `openmediavault-ro-api_1.0.0-1_all.deb` via APT."
             ),
         }
