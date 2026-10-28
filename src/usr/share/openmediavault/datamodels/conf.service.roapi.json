@@ -1,0 +1,124 @@
+{
+	"type": "config",
+	"id": "conf.service.roapi",
+	"title": "Read-Only API",
+	"queryinfo": {
+		"xpath": "//services/roapi",
+		"iterable": false
+	},
+	"properties": {
+		"enable": {
+			"type": "boolean",
+			"default": true
+		},
+		"apitoken": {
+			"type": "string",
+			"default": ""
+		},
+		"regeneratetoken": {
+			"type": "boolean",
+			"default": false
+		},
+		"allowedips": {
+			"type": "string",
+			"default": "127.0.0.1, 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16"
+		},
+		"faildelayms": {
+			"type": "integer",
+			"minimum": 0,
+			"maximum": 5000,
+			"default": 200
+		},
+		"auditlog": {
+			"type": "string",
+			"enum": [ "errors_only", "all", "off" ],
+			"default": "errors_only"
+		},
+		"comment": {
+			"type": "string",
+			"default": ""
+		},
+		"allow_overview": {
+			"type": "boolean",
+			"default": true
+		},
+		"allow_disks": {
+			"type": "boolean",
+			"default": true
+		},
+		"allow_storage": {
+			"type": "boolean",
+			"default": true
+		},
+		"allow_shares": {
+			"type": "boolean",
+			"default": true
+		},
+		"allow_ups": {
+			"type": "boolean",
+			"default": true
+		},
+		"allow_network": {
+			"type": "boolean",
+			"default": true
+		},
+		"allow_apt": {
+			"type": "boolean",
+			"default": true
+		},
+		"allow_configxml": {
+			"type": "boolean",
+			"default": true
+		},
+		"redactpatterns": {
+			"type": "string",
+			"default": "password,passwd,secret,token,apitoken,privatekey,passphrase,shadow,psk,key"
+		},
+		"infisicalenable": {
+			"type": "boolean",
+			"default": false
+		},
+		"infisicalurl": {
+			"type": "string",
+			"default": "https://app.infisical.com"
+		},
+		"infisicalprojectid": {
+			"type": "string",
+			"default": ""
+		},
+		"infisicalenv": {
+			"type": "string",
+			"default": "prod"
+		},
+		"infisicalpath": {
+			"type": "string",
+			"default": "/omv"
+		},
+		"infisicalsecretkey": {
+			"type": "string",
+			"default": "OMV_RO_API_TOKEN"
+		},
+		"infisicalclientid": {
+			"type": "string",
+			"default": ""
+		},
+		"infisicalclientsecret": {
+			"type": "string",
+			"default": ""
+		},
+		"infisicalcachettl": {
+			"type": "integer",
+			"minimum": 10,
+			"maximum": 86400,
+			"default": 300
+		},
+		"infisicalverifyssl": {
+			"type": "boolean",
+			"default": true
+		},
+		"infisicalfallback": {
+			"type": "boolean",
+			"default": true
+		}
+	}
+}

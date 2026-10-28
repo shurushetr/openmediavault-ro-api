@@ -1,0 +1,8 @@
+version: "1.0"
+type: route
+data:
+  url: "/services/roapi"
+  title: _("Read-Only API")
+  editing: true
+  notificationTitle: _("Updated Read-Only API settings.")
+  component: omv-services-roapi-form-page

@@ -1,0 +1,8 @@
+openmediavault-ro-api (1.0.0-1) stable; urgency=low
+
+  * Initial release of openmediavault Read-Only API & Infisical Auditor plugin.
+  * Provides token-authenticated RoApiProxy::query JSON-RPC endpoint with
+    granular UI-controlled read scopes, automatic server-side password/secret
+    redaction, subnet allowlisting, and optional Infisical Universal Auth sync.
+
+ -- shurushetr <shurushetr@gmail.com>  Wed, 28 Oct 2026 05:55:00 -0400

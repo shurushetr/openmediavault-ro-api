@@ -1,0 +1,14 @@
+Package: openmediavault-ro-api
+Version: 1.0.0-1
+Section: admin
+Plugin-Section: utilities
+Priority: optional
+Architecture: all
+Depends: openmediavault (>= 7.0)
+Maintainer: shurushetr <shurushetr@gmail.com>
+Homepage: https://github.com/shurushetr/openmediavault-ro-api
+Description: openmediavault Read-Only API & Infisical Auditor plugin
+ Provides a server-enforced Read-Only JSON-RPC endpoint (RoApiProxy::query)
+ with granular per-section access controls, automatic password/secret redaction,
+ subnet allowlisting, and optional Infisical Universal Auth token synchronization
+ without exposing OpenMediaVault administrator credentials.

@@ -1,0 +1,35 @@
+#!/usr/bin/env dash
+set -e
+
+. /etc/default/openmediavault
+. /usr/share/openmediavault/scripts/helper-functions
+
+remove_action() {
+	rm -f /run/openmediavault-ro-api.cache
+	dpkg-trigger update-workbench || :
+	dpkg-trigger restart-engined || :
+	if command -v omv-mkworkbench >/dev/null 2>&1; then
+		omv-mkworkbench all || :
+	fi
+}
+
+case "$1" in
+	purge|remove)
+		# Note: We intentionally preserve /config/services/roapi in
+		# /etc/openmediavault/config.xml so uninstalling or upgrading
+		# never deletes user settings or modifies config.xml destructively.
+		remove_action
+	;;
+
+	upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
+	;;
+
+	*)
+		echo "postrm called with unknown argument '$1'" >&2
+		exit 1
+	;;
+esac
+
+#DEBHELPER#
+
+exit 0

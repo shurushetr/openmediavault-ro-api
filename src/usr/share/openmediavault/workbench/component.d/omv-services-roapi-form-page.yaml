@@ -1,0 +1,283 @@
+version: "1.0"
+type: component
+data:
+  name: omv-services-roapi-form-page
+  type: formPage
+  config:
+    request:
+      service: RoApi
+      get:
+        method: get
+      post:
+        method: set
+    fields:
+      - type: divider
+        title: _("General & Access Control")
+      - type: checkbox
+        name: enable
+        label: _("Enabled")
+        hint: _("Enable the server-enforced Read-Only JSON-RPC API endpoint (RoApiProxy::query) with automatic password/secret redaction.")
+        value: true
+      - type: passwordInput
+        name: apitoken
+        label: _("Read-Only API token")
+        hint: _("Bearer token required to query RoApiProxy::query (minimum 24 characters). Use the eye icon to reveal/copy, or check 'Generate new random token on save' below.")
+        autocomplete: new-password
+        value: ""
+        validators:
+          minLength: 24
+          requiredIf:
+            operator: falsy
+            arg0:
+              prop: regeneratetoken
+      - type: checkbox
+        name: regeneratetoken
+        label: _("Generate new random 256-bit token on save")
+        hint: _("If checked, saving this form automatically generates a fresh 64-character cryptographic hex token and updates the Read-Only API token field.")
+        value: false
+      - type: textInput
+        name: allowedips
+        label: _("Allowed client IPs / subnets")
+        hint: _("Comma-separated list of IPv4/IPv6 addresses or CIDR blocks permitted to query the Read-Only API (e.g. 127.0.0.1, 10.10.10.0/24, 192.168.1.0/24). Set to * to allow any client with a valid token.")
+        value: "127.0.0.1, 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16"
+        validators:
+          required: true
+      - type: numberInput
+        name: faildelayms
+        label: _("Invalid token delay (ms)")
+        hint: _("Brute-force rate-limiting delay in milliseconds when an unauthorized token is rejected (0 - 5000 ms).")
+        value: 200
+        validators:
+          min: 0
+          max: 5000
+          required: true
+      - type: select
+        name: auditlog
+        label: _("Syslog audit logging")
+        hint: _("Choose which Read-Only API events are recorded in the system log.")
+        value: "errors_only"
+        store:
+          data:
+            - - "errors_only"
+              - _("Unauthorized / rejected requests only")
+            - - "all"
+              - _("All Read-Only API queries and rejections")
+            - - "off"
+              - _("Disabled")
+      - type: textInput
+        name: comment
+        label: _("Comment")
+        hint: _("Optional note (e.g. which dashboard, MCP server, or monitoring agent uses this token).")
+        value: ""
+
+      - type: divider
+        title: _("Allowed Read-Only Data Scopes & Redaction")
+      - type: checkbox
+        name: allow_overview
+        label: _("System overview & service status")
+        hint: _("Allow reading hostname, OMV version, CPU/RAM/load, NTP settings, pending changes (isDirty), and service states (section=overview).")
+        value: true
+      - type: checkbox
+        name: allow_disks
+        label: _("Physical disks & S.M.A.R.T. health")
+        hint: _("Allow reading block device inventory, temperatures, and S.M.A.R.T. attributes/self-test logs (section=disks_and_smart).")
+        value: true
+      - type: checkbox
+        name: allow_storage
+        label: _("Filesystems, mount points, RAID & ZFS")
+        hint: _("Allow reading filesystems, /etc/fstab entries, capacity/usage, /proc/mdstat, and zpool status (section=storage_and_filesystems).")
+        value: true
+      - type: checkbox
+        name: allow_shares
+        label: _("Shared folders, snapshots, SMB & NFS")
+        hint: _("Allow reading shared folder definitions, filesystem snapshots, SMB/CIFS share configurations, and NFS exports (section=shares_and_exports).")
+        value: true
+      - type: checkbox
+        name: allow_ups
+        label: _("UPS / NUT telemetry & power schedules")
+        hint: _("Allow reading NUT settings, live upsc telemetry, redacted /etc/nut/*.conf files, power management settings, and cron jobs (section=ups_and_power).")
+        value: true
+      - type: checkbox
+        name: allow_network
+        label: _("Network interfaces & certificate metadata")
+        hint: _("Allow reading network interfaces, DNS/gateway settings, proxy config, and public TLS/SSH certificate metadata (section=network_and_services).")
+        value: true
+      - type: checkbox
+        name: allow_apt
+        label: _("APT updates & installed plugins")
+        hint: _("Allow reading APT repository settings, pending package upgrades, and installed OMV plugins (section=apt_and_plugins).")
+        value: true
+      - type: checkbox
+        name: allow_configxml
+        label: _("Redacted config.xml export")
+        hint: _("Allow reading the parsed /etc/openmediavault/config.xml tree with all secret/password fields automatically masked (section=config_xml).")
+        value: true
+      - type: textInput
+        name: redactpatterns
+        label: _("Redacted key patterns")
+        hint: _("Comma-separated list of key substrings that are always replaced with ***REDACTED*** before any response leaves the server.")
+        value: "password,passwd,secret,token,apitoken,privatekey,passphrase,shadow,psk,key"
+        validators:
+          required: true
+
+      - type: divider
+        title: _("Infisical Universal Auth Token Sync (Optional)")
+      - type: checkbox
+        name: infisicalenable
+        label: _("Pull token from Infisical")
+        hint: _("When enabled, OpenMediaVault periodically fetches/verifies the expected Read-Only API token directly from an Infisical server (Cloud or self-hosted).")
+        value: false
+      - type: textInput
+        name: infisicalurl
+        label: _("Infisical server URL")
+        hint: _("Base HTTPS URL of your Infisical instance (Cloud or self-hosted).")
+        value: "https://app.infisical.com"
+        modifiers:
+          - type: visible
+            constraint:
+              operator: truthy
+              arg0:
+                prop: infisicalenable
+        validators:
+          requiredIf:
+            operator: truthy
+            arg0:
+              prop: infisicalenable
+      - type: textInput
+        name: infisicalprojectid
+        label: _("Project / Workspace ID")
+        hint: _("Infisical Project ID containing the Read-Only API token secret.")
+        value: ""
+        modifiers:
+          - type: visible
+            constraint:
+              operator: truthy
+              arg0:
+                prop: infisicalenable
+        validators:
+          requiredIf:
+            operator: truthy
+            arg0:
+              prop: infisicalenable
+      - type: textInput
+        name: infisicalenv
+        label: _("Environment slug")
+        hint: _("Infisical environment slug (e.g. prod, staging, dev).")
+        value: "prod"
+        modifiers:
+          - type: visible
+            constraint:
+              operator: truthy
+              arg0:
+                prop: infisicalenable
+        validators:
+          requiredIf:
+            operator: truthy
+            arg0:
+              prop: infisicalenable
+      - type: textInput
+        name: infisicalpath
+        label: _("Secret folder path")
+        hint: _("Folder path inside the Infisical project (e.g. / or /omv).")
+        value: "/omv"
+        modifiers:
+          - type: visible
+            constraint:
+              operator: truthy
+              arg0:
+                prop: infisicalenable
+        validators:
+          requiredIf:
+            operator: truthy
+            arg0:
+              prop: infisicalenable
+      - type: textInput
+        name: infisicalsecretkey
+        label: _("Secret key name")
+        hint: _("Name of the secret key in Infisical holding the Read-Only API token.")
+        value: "OMV_RO_API_TOKEN"
+        modifiers:
+          - type: visible
+            constraint:
+              operator: truthy
+              arg0:
+                prop: infisicalenable
+        validators:
+          requiredIf:
+            operator: truthy
+            arg0:
+              prop: infisicalenable
+      - type: textInput
+        name: infisicalclientid
+        label: _("Universal Auth Client ID")
+        hint: _("Machine Identity Universal Auth Client ID (with read/Viewer access to the secret path).")
+        value: ""
+        modifiers:
+          - type: visible
+            constraint:
+              operator: truthy
+              arg0:
+                prop: infisicalenable
+        validators:
+          requiredIf:
+            operator: truthy
+            arg0:
+              prop: infisicalenable
+      - type: passwordInput
+        name: infisicalclientsecret
+        label: _("Universal Auth Client Secret")
+        autocomplete: new-password
+        value: ""
+        modifiers:
+          - type: visible
+            constraint:
+              operator: truthy
+              arg0:
+                prop: infisicalenable
+        validators:
+          requiredIf:
+            operator: truthy
+            arg0:
+              prop: infisicalenable
+      - type: numberInput
+        name: infisicalcachettl
+        label: _("Token cache TTL (seconds)")
+        hint: _("How long to cache the token fetched from Infisical in memory (/run) before re-validating (10 - 86400 seconds).")
+        value: 300
+        modifiers:
+          - type: visible
+            constraint:
+              operator: truthy
+              arg0:
+                prop: infisicalenable
+        validators:
+          min: 10
+          max: 86400
+      - type: checkbox
+        name: infisicalverifyssl
+        label: _("Verify Infisical TLS certificate")
+        hint: _("Verify the HTTPS certificate of the Infisical server. Uncheck only if using a self-signed internal certificate.")
+        value: true
+        modifiers:
+          - type: visible
+            constraint:
+              operator: truthy
+              arg0:
+                prop: infisicalenable
+      - type: checkbox
+        name: infisicalfallback
+        label: _("Fall back to local token if Infisical is unreachable")
+        hint: _("If checked, uses the local Read-Only API token above when the Infisical server cannot be reached.")
+        value: true
+        modifiers:
+          - type: visible
+            constraint:
+              operator: truthy
+              arg0:
+                prop: infisicalenable
+    buttons:
+      - template: submit
+      - template: cancel
+        execute:
+          type: url
+          url: "/services"

@@ -1,0 +1,149 @@
+[
+	{
+		"type": "rpc",
+		"id": "rpc.roapi.set",
+		"params": {
+			"type": "object",
+			"properties": {
+				"enable": {
+					"type": "boolean",
+					"required": true
+				},
+				"apitoken": {
+					"type": "string",
+					"required": false
+				},
+				"regeneratetoken": {
+					"type": "boolean",
+					"required": false
+				},
+				"allowedips": {
+					"type": "string",
+					"required": true
+				},
+				"faildelayms": {
+					"type": "integer",
+					"minimum": 0,
+					"maximum": 5000,
+					"required": true
+				},
+				"auditlog": {
+					"type": "string",
+					"enum": [ "errors_only", "all", "off" ],
+					"required": true
+				},
+				"comment": {
+					"type": "string",
+					"required": false
+				},
+				"allow_overview": {
+					"type": "boolean",
+					"required": true
+				},
+				"allow_disks": {
+					"type": "boolean",
+					"required": true
+				},
+				"allow_storage": {
+					"type": "boolean",
+					"required": true
+				},
+				"allow_shares": {
+					"type": "boolean",
+					"required": true
+				},
+				"allow_ups": {
+					"type": "boolean",
+					"required": true
+				},
+				"allow_network": {
+					"type": "boolean",
+					"required": true
+				},
+				"allow_apt": {
+					"type": "boolean",
+					"required": true
+				},
+				"allow_configxml": {
+					"type": "boolean",
+					"required": true
+				},
+				"redactpatterns": {
+					"type": "string",
+					"required": true
+				},
+				"infisicalenable": {
+					"type": "boolean",
+					"required": false
+				},
+				"infisicalurl": {
+					"type": "string",
+					"required": false
+				},
+				"infisicalprojectid": {
+					"type": "string",
+					"required": false
+				},
+				"infisicalenv": {
+					"type": "string",
+					"required": false
+				},
+				"infisicalpath": {
+					"type": "string",
+					"required": false
+				},
+				"infisicalsecretkey": {
+					"type": "string",
+					"required": false
+				},
+				"infisicalclientid": {
+					"type": "string",
+					"required": false
+				},
+				"infisicalclientsecret": {
+					"type": "string",
+					"required": false
+				},
+				"infisicalcachettl": {
+					"type": "integer",
+					"minimum": 10,
+					"maximum": 86400,
+					"required": false
+				},
+				"infisicalverifyssl": {
+					"type": "boolean",
+					"required": false
+				},
+				"infisicalfallback": {
+					"type": "boolean",
+					"required": false
+				}
+			}
+		}
+	},
+	{
+		"type": "rpc",
+		"id": "rpc.roapi.query",
+		"params": {
+			"type": "object",
+			"properties": {
+				"token": {
+					"type": "string",
+					"required": false
+				},
+				"section": {
+					"type": "string",
+					"required": false
+				},
+				"devicefile": {
+					"type": "string",
+					"required": false
+				},
+				"_client_ip": {
+					"type": "string",
+					"required": false
+				}
+			}
+		}
+	}
+]
