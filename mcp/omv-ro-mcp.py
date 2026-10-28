@@ -7,14 +7,15 @@ Exposes 10 strictly read-only tools (including `omv_get_diagnostics` and
 `omv_get_logs` for agentic self-diagnosis and feedback) without requiring
 OMV administrator credentials or SSH access.
 
-Configuration (Environment Variables):
-  - OMV_HOST          : Base URL or IP of the OpenMediaVault server (e.g., "http://192.168.1.50")
-  - OMV_RO_API_TOKEN  : 64-character hex Read-Only API token configured in OMV
-                        (or synced via Infisical Universal Auth)
-  - OMV_VERIFY_SSL    : Set to "true" to enforce TLS certificate verification (default: "false" for LAN IPs)
+Configuration (Environment Variables — No Infisical Required):
+  - OMV_HOST               : Base URL or IP of the OpenMediaVault server (e.g., "http://192.168.1.50")
+  - OMV_RO_API_TOKEN       : 64-character hex Read-Only API token configured in OMV
+  - OMV_RO_API_TOKEN_FILE  : Optional path to a chmod 0600 file containing the token (alternative
+                             to putting OMV_RO_API_TOKEN directly in mcp_config.json)
+  - OMV_VERIFY_SSL         : Set to "true" to enforce TLS certificate verification (default: "false" for LAN IPs)
 
 Optional Zero-Knowledge Infisical CLI Runtime Injection:
-  If `OMV_RO_API_TOKEN` is not set in the environment and `INFISICAL_PROJECT_ID`
+  If `OMV_RO_API_TOKEN` / `OMV_RO_API_TOKEN_FILE` are not set and `INFISICAL_PROJECT_ID`
   is provided, `omv-ro-mcp` automatically invokes `infisical run` in a child
   process so secrets never appear in your MCP client config file.
     - INFISICAL_PROJECT_ID : Infisical Project ID
@@ -164,13 +165,35 @@ SECTION_BY_TOOL = {t["name"]: t["section"] for t in TOOLS}
 
 def fetch_creds_via_infisical() -> Dict[str, Any]:
     """
-    Retrieve OMV_HOST and OMV_RO_API_TOKEN from environment variables or, if
-    INFISICAL_PROJECT_ID is configured, via `infisical run` inside a child Python process.
+    Retrieve OMV_HOST and OMV_RO_API_TOKEN from:
+      1. Environment variables (OMV_HOST + OMV_RO_API_TOKEN)
+      2. Token file (OMV_HOST + OMV_RO_API_TOKEN_FILE, e.g. ~/.config/omv-ro/token)
+      3. Optional Infisical CLI runtime injection (if INFISICAL_PROJECT_ID is set)
     """
     host = os.environ.get("OMV_HOST", "").strip()
     token = os.environ.get("OMV_RO_API_TOKEN", "").strip()
+    token_file = os.environ.get("OMV_RO_API_TOKEN_FILE", "").strip()
+
+    if not token and token_file:
+        expanded = os.path.expanduser(token_file)
+        if os.path.isfile(expanded):
+            try:
+                with open(expanded, "r", encoding="utf-8") as fh:
+                    token = fh.read().strip()
+            except Exception as exc:
+                return {
+                    "host": host,
+                    "token": "",
+                    "source": f"token_file ({expanded})",
+                    "infisical_error": f"Failed to read OMV_RO_API_TOKEN_FILE: {exc}",
+                }
+
     if host and token:
-        return {"host": host, "token": token, "source": "environment"}
+        return {
+            "host": host,
+            "token": token,
+            "source": "token_file" if token_file else "environment",
+        }
 
     project_id = os.environ.get("INFISICAL_PROJECT_ID", "").strip()
     infisical_err: Optional[str] = None

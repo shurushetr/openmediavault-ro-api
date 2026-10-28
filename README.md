@@ -144,7 +144,7 @@ The repository includes a zero-dependency Python 3 MCP server ([`mcp/omv-ro-mcp.
 - `omv_get_logs` *(query `roapi`, `syslog`, `daemon`, `smartd`, `nut`, `engined`, `smb`, `nfs`, `nginx` logs)*
 - `omv_get_diagnostics` *(agent self-diagnostic & feedback loop tool)*
 
-### Option A: Standard Environment Variables (`mcp_config.json`)
+### Option A: Standard Environment Variables (No Infisical Required)
 
 ```json
 {
@@ -161,7 +161,26 @@ The repository includes a zero-dependency Python 3 MCP server ([`mcp/omv-ro-mcp.
 }
 ```
 
-### Option B: Zero-Knowledge Infisical CLI Runtime Injection
+### Option B: Local `0600` Token File (No Infisical, No Plaintext Token in `mcp_config.json`)
+
+Store the token in `~/.config/omv-ro/token` (`chmod 600 ~/.config/omv-ro/token`) and reference it via `OMV_RO_API_TOKEN_FILE`:
+
+```json
+{
+  "mcpServers": {
+    "omv-ro": {
+      "command": "python3",
+      "args": ["/path/to/openmediavault-ro-api/mcp/omv-ro-mcp.py"],
+      "env": {
+        "OMV_HOST": "http://192.168.1.50",
+        "OMV_RO_API_TOKEN_FILE": "~/.config/omv-ro/token"
+      }
+    }
+  }
+}
+```
+
+### Option C: Zero-Knowledge Infisical CLI Runtime Injection (Optional)
 
 If you store `OMV_HOST` and `OMV_RO_API_TOKEN` inside Infisical, pass only `INFISICAL_PROJECT_ID` in `mcp_config.json`—no secrets are written to disk:
 
