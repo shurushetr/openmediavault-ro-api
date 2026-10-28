@@ -16,12 +16,12 @@ data:
       - type: checkbox
         name: enable
         label: _("Enabled")
-        hint: _("Enable the server-enforced Read-Only JSON-RPC API endpoint (RoApiProxy::query) with automatic password/secret redaction.")
+        hint: _("Enable the server-enforced Read-Only API endpoint (/ro-api.php / RoApi::query) with automatic password and secret redaction.")
         value: true
       - type: passwordInput
         name: apitoken
         label: _("Read-Only API token")
-        hint: _("Bearer token required to query RoApiProxy::query (minimum 24 characters). Use the eye icon to reveal/copy, or check 'Generate new random token on save' below.")
+        hint: _("Bearer token required to query /ro-api.php (minimum 24 characters). Use the eye icon to reveal/copy, or check 'Generate new random 256-bit token on save' below.")
         autocomplete: new-password
         value: ""
         validators:
@@ -38,7 +38,7 @@ data:
       - type: textInput
         name: allowedips
         label: _("Allowed client IPs / subnets")
-        hint: _("Comma-separated list of IPv4/IPv6 addresses or CIDR blocks permitted to query the Read-Only API (e.g. 127.0.0.1, 10.10.10.0/24, 192.168.1.0/24). Set to * to allow any client with a valid token.")
+        hint: _("Comma-separated list of IPv4/IPv6 addresses or CIDR blocks permitted to query the Read-Only API (e.g. 127.0.0.1, 10.0.0.0/24, 192.168.1.0/24). Set to * to allow any client with a valid token.")
         value: "127.0.0.1, 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16"
         validators:
           required: true

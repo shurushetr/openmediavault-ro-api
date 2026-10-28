@@ -1,2 +1,3 @@
-activate update-workbench
-activate restart-engined
+activate-noawait update-workbench
+activate-noawait restart-engined
+activate-noawait update-fixperms

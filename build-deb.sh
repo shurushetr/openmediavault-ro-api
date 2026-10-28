@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Build openmediavault-ro-api_1.0.0-1_all.deb
+# Build openmediavault-ro-api_1.0.0-1_all.deb from canonical OMV repo layout
 # Usage:
 #   ./build-deb.sh [/output/dir]
 #   DEFAULT_OMV_RO_TOKEN="<64-hex>" ./build-deb.sh [/output/dir]
@@ -18,10 +18,37 @@ trap 'rm -rf "${STAGE_DIR}"' EXIT
 
 ROOT_DIR="${STAGE_DIR}/${PKG_NAME}_${PKG_VER}_all"
 mkdir -p "${ROOT_DIR}/DEBIAN"
-cp -a "${SCRIPT_DIR}/DEBIAN/." "${ROOT_DIR}/DEBIAN/"
-cp -a "${SCRIPT_DIR}/src/." "${ROOT_DIR}/"
 
-# Optional build-time initial token injection (keeps git source secret-free)
+# Generate binary DEBIAN/control from canonical debian/control
+cat << 'EOF' > "${ROOT_DIR}/DEBIAN/control"
+Package: openmediavault-ro-api
+Version: 1.0.0-1
+Section: utils
+Plugin-Section: utilities
+Priority: optional
+Architecture: all
+Depends: openmediavault (>= 7.0)
+Maintainer: shurushetr <shurushetr@gmail.com>
+Homepage: https://github.com/shurushetr/openmediavault-ro-api
+Description: openmediavault Read-Only API plugin
+ Read-only JSON-RPC and REST API plugin for OpenMediaVault 7/8 with
+ granular per-scope access controls, automatic password and secret
+ redaction, IP/CIDR allowlisting, native System Logs integration,
+ and optional Infisical Universal Auth token synchronization.
+EOF
+
+sed '/^#DEBHELPER#/d' "${SCRIPT_DIR}/debian/openmediavault-ro-api.postinst" > "${ROOT_DIR}/DEBIAN/postinst"
+sed '/^#DEBHELPER#/d' "${SCRIPT_DIR}/debian/openmediavault-ro-api.postrm" > "${ROOT_DIR}/DEBIAN/postrm"
+cp -a "${SCRIPT_DIR}/debian/openmediavault-ro-api.triggers" "${ROOT_DIR}/DEBIAN/triggers"
+
+# Copy canonical filesystem trees installed by debian/install
+for dir in etc srv usr var; do
+    if [ -d "${SCRIPT_DIR}/${dir}" ]; then
+        cp -a "${SCRIPT_DIR}/${dir}" "${ROOT_DIR}/"
+    fi
+done
+
+# Optional build-time initial token injection (keeps git source 100% secret-free)
 if [ -n "${DEFAULT_OMV_RO_TOKEN:-}" ]; then
     sed -i "s|__INITIAL_RO_TOKEN__|${DEFAULT_OMV_RO_TOKEN}|g" \
         "${ROOT_DIR}/usr/share/openmediavault/confdb/create.d/conf.service.roapi.sh"
@@ -35,7 +62,7 @@ cp -a "${SCRIPT_DIR}/debian/copyright" "${DOC_DIR}/copyright"
 
 # Normalize permissions
 find "${ROOT_DIR}" -type d -exec chmod 0755 {} +
-find "${ROOT_DIR}/usr" "${ROOT_DIR}/var" -type f -exec chmod 0644 {} +
+find "${ROOT_DIR}/etc" "${ROOT_DIR}/srv" "${ROOT_DIR}/usr" "${ROOT_DIR}/var" -type f -exec chmod 0644 {} +
 chmod 0644 "${ROOT_DIR}/DEBIAN/control" "${ROOT_DIR}/DEBIAN/triggers"
 chmod 0755 "${ROOT_DIR}/DEBIAN/postinst" "${ROOT_DIR}/DEBIAN/postrm"
 chmod 0755 "${ROOT_DIR}/usr/share/openmediavault/confdb/create.d/conf.service.roapi.sh"

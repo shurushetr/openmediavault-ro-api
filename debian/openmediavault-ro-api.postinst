@@ -20,12 +20,33 @@ case "$1" in
 		chown root:adm "${LOG_FILE}" 2>/dev/null || :
 		printf "%s INFO [lifecycle] 127.0.0.1 openmediavault-ro-api package configured and ready\n" "$(date -Iseconds)" >> "${LOG_FILE}" || :
 
+		# Auto-detect the active OMV WebGUI PHP-FPM socket (PHP 8.2 on OMV 7, PHP 8.4 on OMV 8)
+		NGINX_CONF="/etc/nginx/openmediavault-webgui.d/openmediavault-ro-api.conf"
+		if [ -f "${NGINX_CONF}" ]; then
+			FPM_SOCK=""
+			if [ -f /etc/nginx/sites-available/openmediavault-webgui ]; then
+				FPM_SOCK=$(sed -n 's/.*fastcgi_pass[[:space:]]\+unix:\([^;]*openmediavault-webgui\.sock\);.*/\1/p' /etc/nginx/sites-available/openmediavault-webgui | head -n 1)
+			fi
+			if [ -z "${FPM_SOCK}" ]; then
+				for candidate in /run/php/php*-fpm-openmediavault-webgui.sock; do
+					if [ -S "${candidate}" ]; then
+						FPM_SOCK="${candidate}"
+						break
+					fi
+				done
+			fi
+			if [ -n "${FPM_SOCK}" ]; then
+				sed -i "s|unix:/run/php/php[^;]*-fpm-openmediavault-webgui\.sock|unix:${FPM_SOCK}|g" "${NGINX_CONF}" || :
+			fi
+		fi
+
+		if command -v nginx >/dev/null 2>&1 && nginx -t >/dev/null 2>&1; then
+			systemctl reload nginx 2>/dev/null || service nginx reload 2>/dev/null || :
+		fi
+
+		dpkg-trigger update-fixperms || :
 		dpkg-trigger update-workbench || :
 		dpkg-trigger restart-engined || :
-
-		if command -v omv-mkworkbench >/dev/null 2>&1; then
-			omv-mkworkbench all || :
-		fi
 	;;
 
 	abort-upgrade|abort-remove|abort-deconfigure)

@@ -10,15 +10,15 @@ Give AI coding assistants (**Claude Desktop, Claude Code, Cursor, Google Antigra
 
 ## Why Use `openmediavault-ro-api`?
 
-By default, OpenMediaVault's API (`/rpc.php`) requires an administrator login session (`OMV_ROLE_ADMINISTRATOR`), which grants full permission to format disks, delete shared folders, or change passwords.
+By default, OpenMediaVault's web RPC gateway (`/rpc.php` -> `OMV\Rpc\Proxy\Json::handle()`) enforces an administrator browser session (`OMV\Session::validateAuthentication()`, `OMV_ROLE_ADMINISTRATOR`) for every RPC service except `Session::login`. Giving an AI agent or dashboard your `admin` credentials grants full permission to format disks, delete shared folders, or change passwords.
 
-`openmediavault-ro-api` installs as a native `.deb` plugin inside OpenMediaVault and adds a **dedicated, server-enforced Read-Only endpoint (`RoApiProxy::query`)**:
+`openmediavault-ro-api` installs as a native `.deb` plugin inside OpenMediaVault 7 (`sandworm`) / 8 (`synchrony`) and provides a **dedicated, session-free, server-enforced Read-Only endpoint (`/ro-api.php` -> `RoApi::query`)**:
 
-- **Strictly Read-Only by Design:** Exposes zero `set`, `delete`, `applyChanges`, or shell-execution methods. Even its dynamic plugin inspector (`omv_inspect_rpc`) enforces a server-side allowlist that permits only read-only getters (`get*`, `enumerate*`, `list*`, `is*`, `has*`, `status*`).
+- **Strictly Read-Only by Design:** Exposes zero `set`, `delete`, `applyChanges`, or shell-execution methods to token clients. Even its dynamic plugin inspector (`omv_inspect_rpc`) enforces a server-side allowlist that permits only read-only getters (`get*`, `enumerate*`, `list*`, `is*`, `has*`, `status*`).
 - **Automatic Password & Secret Redaction:** Every response is scrubbed inside `omv-engined` *before* it leaves your NAS. Passwords, private keys, API tokens, WireGuard keys, and NUT/SMB secrets are replaced with `***REDACTED***`.
 - **Full `omv-extras` Support:** Audits both core OpenMediaVault services and `omv-extras` plugins (Docker Compose, MergerFS, SnapRAID, ZFS, KVM/Libvirt, WireGuard, BorgBackup, RemoteMount, LUKS, MD RAID, iSCSI, CPU Temp, and more).
 - **Built for AI Agents:** Includes an inline `_agent_feedback` block on every response plus dedicated `omv_get_diagnostics` and `omv_get_logs` tools so AI agents can self-diagnose permission scopes, service latency, and daemon logs.
-- **100% Configurable in the OMV Web UI:** Control allowed IP subnets, toggle individual data scopes on/off, rotate tokens with one click, and view audit logs directly inside the OpenMediaVault interface.
+- **Native OMV Workbench & Service Integration:** Integrates with **`Services` -> `Read-Only API`**, **`Diagnostics` -> `Services` -> `Overview`** (`Engined\Module\RoApi`), and **`Diagnostics` -> `System Logs` -> `Logs` -> `Read-Only API`**.
 - **Safe Uninstall Guarantee:** Removing or purging the plugin **never** deletes your saved settings in `/etc/openmediavault/config.xml`.
 
 <!-- SCREENSHOT 1 PLACEHOLDER -->
@@ -30,28 +30,32 @@ By default, OpenMediaVault's API (`/rpc.php`) requires an administrator login se
 
 ## Quick Start (3 Minutes)
 
-### Step 1: Install the Plugin in OpenMediaVault
+### Step 1: Install the Plugin in OpenMediaVault 7 / 8
 
-> [!NOTE]
-> OpenMediaVault 6 / 7 / 8 removed the legacy `.deb` upload button from `System -> Plugins`. Choose either **Option A (100% Web UI — No SSH)** or **Option B (SSH One-Liner)** below.
+Choose any of the three standard OpenMediaVault 7/8 installation methods below:
 
-#### Option A: 100% OMV Web UI (No SSH Required)
-1. In the OpenMediaVault Web UI, go to **`System` -> `Scheduled Tasks`** and click **`Create`** (`+`).
-2. Leave **Enabled** unchecked (you only need to run it once), set **User** to `root`, and paste the following into **Command**:
-   ```bash
-   curl -fsSL https://github.com/shurushetr/openmediavault-ro-api/releases/latest/download/openmediavault-ro-api_1.0.0-1_all.deb -o /tmp/openmediavault-ro-api.deb && apt-get install -y /tmp/openmediavault-ro-api.deb
-   ```
-3. Click **`Save`** (you do not need to apply the yellow configuration banner just to run the task manually).
-4. Select the newly created task in the table and click **`Run`** (the play `▶` icon on the top toolbar), then click **`Start`**.
-5. Once the output window finishes with `Setting up openmediavault-ro-api (1.0.0-1) ...`, close the window, delete the temporary scheduled task, and hard-refresh your browser (`Ctrl + Shift + R`).
+#### Option A: 1-Line APT Repository Installer (`omv-extras` Style — Recommended)
+Run the repository bootstrap script via SSH (or once via **`System` -> `Scheduled Tasks`** as `root`). This installs the GPG keyring (`/usr/share/keyrings/openmediavault-ro-api-keyring.gpg`), registers the DEB822 APT source (`/etc/apt/sources.list.d/openmediavault-ro-api.sources`), and installs `openmediavault-ro-api` so future updates appear automatically in **`System` -> `Update Management`**:
+```bash
+wget -O - https://shurushetr.github.io/openmediavault-ro-api/install | sudo bash
+```
+
+#### Option B: 100% OMV Web UI via `openmediavault-apt` + `System` -> `Plugins`
+1. In the OpenMediaVault Web UI, go to **`System` -> `Plugins`**, ensure **`openmediavault-apt`** is installed, and apply changes if prompted.
+2. Go to **`System` -> `APT`** (Repositories) and click **`Create`** (`+`):
+   - **URI / URL:** `https://shurushetr.github.io/openmediavault-ro-api`
+   - **Distribution / Suites:** `sandworm`
+   - **Components:** `main`
+   - **GPG Key:** Paste the contents of [`openmediavault-ro-api.asc`](https://shurushetr.github.io/openmediavault-ro-api/openmediavault-ro-api.asc)
+3. Save and apply the yellow configuration banner.
+4. Go to **`System` -> `Plugins`**, click **`Check for new plugins`** (`🔍`), select **`openmediavault-ro-api`**, and click **`Install`** (`⬇`).
 
 <!-- SCREENSHOT 2 PLACEHOLDER -->
 <!--
-![Installing openmediavault-ro-api via System -> Scheduled Tasks -> Run](docs/images/02-omv-plugin-install.png)
+![Installing openmediavault-ro-api in System -> Plugins](docs/images/02-omv-plugin-install.png)
 -->
 
-#### Option B: SSH / Terminal One-Liner
-Run the following on your OpenMediaVault server via SSH:
+#### Option C: Direct `.deb` Package Install
 ```bash
 curl -fsSL https://github.com/shurushetr/openmediavault-ro-api/releases/latest/download/openmediavault-ro-api_1.0.0-1_all.deb -o /tmp/openmediavault-ro-api.deb && sudo apt-get install -y /tmp/openmediavault-ro-api.deb
 ```
@@ -381,7 +385,7 @@ You can inspect all Read-Only API activity directly inside the OpenMediaVault We
 ### Section 1: General & Access Control
 | UI Field | XML Key | Default | Description |
 | :--- | :--- | :--- | :--- |
-| **Enabled** | `enable` | `true` | Master switch for `RoApiProxy::query`. |
+| **Enabled** | `enable` | `true` | Master switch for `/ro-api.php` (`RoApi::query`). |
 | **Read-Only API token** | `apitoken` | Auto-generated 256-bit hex | Bearer token required to query the API. |
 | **Generate new random 256-bit token on save** | `regeneratetoken` | `false` | Generates a fresh 64-character CSPRNG hex token when saving and resets the checkbox to `false`. |
 | **Allowed client IPs / subnets** | `allowedips` | `127.0.0.1, 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16` | Comma-separated IPv4 addresses or CIDR blocks allowed to query the API (`*` allows any IP with a valid token). |
@@ -390,7 +394,7 @@ You can inspect all Read-Only API activity directly inside the OpenMediaVault We
 | **Comment** | `comment` | *(empty)* | Optional note (e.g., which dashboard or MCP agent uses this token). |
 
 ### Section 2: Allowed Read-Only Data Scopes & Redaction
-Granularly enable or disable any of the 10 read-only scopes (`allow_overview`, `allow_disks`, `allow_storage`, `allow_shares`, `allow_ups`, `allow_network`, `allow_apt`, `allow_omv_extras`, `allow_rpc_inspect`, `allow_configxml`, `allow_logs`, `allow_diagnostics`) or add custom comma-separated key substrings to **`Redacted key patterns`** (`redactpatterns`).
+Granularly enable or disable any of the 12 read-only scopes (`allow_overview`, `allow_disks`, `allow_storage`, `allow_shares`, `allow_ups`, `allow_network`, `allow_apt`, `allow_omv_extras`, `allow_rpc_inspect`, `allow_configxml`, `allow_logs`, `allow_diagnostics`) or add custom comma-separated key substrings to **`Redacted key patterns`** (`redactpatterns`).
 
 ### Section 3: Optional Infisical Universal Auth Token Sync
 For homelabs and teams using [**Infisical**](https://infisical.com) (Cloud or self-hosted), check **"Pull token from Infisical"** (`infisicalenable`) to have OpenMediaVault automatically fetch and cache (`/run/openmediavault-ro-api.cache`, `0600`) the expected token using a read-only Machine Identity (`infisicalurl`, `infisicalprojectid`, `infisicalenv`, `infisicalpath`, `infisicalsecretkey`, `infisicalclientid`, `infisicalclientsecret`, `infisicalcachettl`, `infisicalverifyssl`, `infisicalfallback`).
@@ -414,36 +418,70 @@ On the MCP client side, if you use the Infisical CLI, you can omit `OMV_RO_API_T
 
 ## Direct HTTP API Usage (Without MCP)
 
-You can also query the Read-Only API directly from any script, monitoring tool, or dashboard via HTTP `POST` to `/rpc.php`:
+You can also query `/ro-api.php` directly from any script, monitoring tool, or dashboard via HTTP `POST` or `GET`:
 
-#### Linux (`curl`)
+#### Linux (`curl` — POST JSON-RPC or GET with Bearer Header)
 ```bash
-curl -sS -X POST "http://192.168.1.50/rpc.php" \
+# Option 1: Simple GET with Authorization: Bearer header
+curl -sS "http://192.168.1.50/ro-api.php?section=overview" \
+  -H "Authorization: Bearer YOUR_64_CHAR_TOKEN" | jq .
+
+# Option 2: JSON-RPC POST body
+curl -sS -X POST "http://192.168.1.50/ro-api.php" \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_64_CHAR_TOKEN" \
   -d '{
-    "service": "RoApiProxy",
+    "service": "RoApi",
     "method": "query",
     "params": {
-      "section": "overview",
-      "token": "YOUR_64_CHAR_TOKEN"
-    },
-    "options": null
+      "section": "overview"
+    }
   }' | jq .
 ```
 
 #### Windows (`PowerShell`)
 ```powershell
-$body = @{
-  service = "RoApiProxy"
-  method  = "query"
-  params  = @{
-    section = "overview"
-    token   = "YOUR_64_CHAR_TOKEN"
-  }
-  options = $null
-} | ConvertTo-Json -Depth 4
+$headers = @{
+  Authorization = "Bearer YOUR_64_CHAR_TOKEN"
+}
+Invoke-RestMethod -Method Get -Uri "http://192.168.1.50/ro-api.php?section=overview" -Headers $headers | ConvertTo-Json -Depth 6
+```
 
-Invoke-RestMethod -Method Post -Uri "http://192.168.1.50/rpc.php" -ContentType "application/json" -Body $body | ConvertTo-Json -Depth 6
+---
+
+## Repository Structure (Canonical OpenMediaVault 7 / 8 Plugin Layout)
+
+```text
+openmediavault-ro-api/
+├── debian/                                                       # Debian packaging (debhelper / dpkg-buildpackage)
+│   ├── changelog
+│   ├── control                                                   # Section: utils, XB-Plugin-Section: utilities
+│   ├── copyright
+│   ├── install                                                   # Maps etc/, srv/, usr/, var/ into package root
+│   ├── openmediavault-ro-api.postinst                            # Runs omv-confdbadm create & configures nginx socket
+│   ├── openmediavault-ro-api.postrm                              # Non-destructive removal (preserves config.xml)
+│   ├── openmediavault-ro-api.triggers                            # activate-noawait update-workbench / restart-engined
+│   └── rules
+├── etc/nginx/openmediavault-webgui.d/openmediavault-ro-api.conf  # Routes /ro-api.php to OMV WebGUI PHP-FPM socket
+├── srv/salt/omv/deploy/roapi/default.sls                         # SaltStack deployment state (omv-salt deploy run roapi)
+├── usr/share/openmediavault/
+│   ├── confdb/create.d/conf.service.roapi.sh                     # Seeds /config/services/roapi in config.xml
+│   ├── datamodels/
+│   │   ├── conf.service.roapi.json                               # Config database JSON schema
+│   │   └── rpc.roapi.json                                        # RPC parameter validation schemas
+│   ├── engined/
+│   │   ├── inc/90roapi-logfile.inc                               # LogFileSpec registration for System Logs UI
+│   │   ├── module/roapi.inc                                      # Engined\Module\RoApi (IServiceStatus)
+│   │   └── rpc/roapi.inc                                         # OMVRpcServiceRoApi (get, set, query)
+│   └── workbench/
+│       ├── component.d/omv-services-roapi-form-page.yaml         # Services -> Read-Only API form
+│       ├── log.d/roapi.yaml                                      # Diagnostics -> System Logs -> Read-Only API
+│       ├── navigation.d/services.roapi.yaml                      # Workbench sidebar navigation item
+│       └── route.d/services.roapi.yaml                           # Angular Workbench route definition
+├── var/www/openmediavault/ro-api.php                             # Session-free token-authenticated HTTP entry point
+├── mcp/omv-ro-mcp.py                                             # Zero-dependency Python MCP server (Linux & Windows)
+├── scripts/build-apt-repo.sh                                     # Builds GPG-signed Debian APT repository (DEB822)
+└── build-deb.sh                                                  # Standalone .deb builder
 ```
 
 ---
@@ -453,8 +491,12 @@ Invoke-RestMethod -Method Post -Uri "http://192.168.1.50/rpc.php" -ContentType "
 On Debian / Ubuntu (or WSL2 on Windows):
 
 ```bash
+# Build .deb package
 ./build-deb.sh
 # Output: dist/openmediavault-ro-api_1.0.0-1_all.deb
+
+# Build signed Debian APT repository (dists/sandworm, bookworm, synchrony, trixie)
+./scripts/build-apt-repo.sh dist/openmediavault-ro-api_1.0.0-1_all.deb dist/apt-repo
 ```
 
 Or using standard Debian build tools:

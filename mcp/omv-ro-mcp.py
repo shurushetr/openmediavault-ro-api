@@ -3,7 +3,7 @@
 OpenMediaVault Read-Only MCP Server (omv-ro-mcp)
 ================================================
 Companion Model Context Protocol (MCP) server for `openmediavault-ro-api`.
-Exposes 10 strictly read-only tools (including `omv_get_diagnostics` and
+Exposes 12 strictly read-only tools (including `omv_get_diagnostics` and
 `omv_get_logs` for agentic self-diagnosis and feedback) without requiring
 OMV administrator credentials or SSH access.
 
@@ -250,30 +250,34 @@ def fetch_creds_via_infisical() -> Dict[str, Any]:
             "'token': os.environ.get('OMV_RO_API_TOKEN', '')"
             "}))"
         )
-        cmd = [
-            "infisical",
-            "run",
-            f"--projectId={project_id}",
-            f"--env={DEFAULT_INFISICAL_ENV}",
-            f"--path={DEFAULT_INFISICAL_PATH}",
-            "--silent",
-            "--",
-            sys.executable,
-            "-c",
-            helper_code,
-        ]
-        try:
-            proc = subprocess.run(cmd, capture_output=True, text=True, timeout=15, check=False)
-            if proc.returncode == 0 and proc.stdout.strip():
-                data = json.loads(proc.stdout.strip())
-                if data.get("token"):
-                    token = data["token"].strip()
-                if data.get("host"):
-                    host = data["host"].strip()
-            else:
-                infisical_err = (proc.stderr or proc.stdout or f"exit code {proc.returncode}").strip()[:400]
-        except Exception as exc:
-            infisical_err = str(exc)
+        for candidate_path in (DEFAULT_INFISICAL_PATH, "/"):
+            cmd = [
+                "infisical",
+                "run",
+                f"--projectId={project_id}",
+                f"--env={DEFAULT_INFISICAL_ENV}",
+                f"--path={candidate_path}",
+                "--silent",
+                "--",
+                sys.executable,
+                "-c",
+                helper_code,
+            ]
+            try:
+                proc = subprocess.run(cmd, capture_output=True, text=True, timeout=15, check=False)
+                if proc.returncode == 0 and proc.stdout.strip():
+                    data = json.loads(proc.stdout.strip())
+                    if data.get("token"):
+                        token = data["token"].strip()
+                    if data.get("host"):
+                        host = data["host"].strip()
+                    if token and host:
+                        infisical_err = None
+                        break
+                else:
+                    infisical_err = (proc.stderr or proc.stdout or f"exit code {proc.returncode}").strip()[:400]
+            except Exception as exc:
+                infisical_err = str(exc)
 
     return {
         "host": host,
@@ -309,7 +313,7 @@ def query_omv_ro_api(section: str, extra_params: Optional[Dict[str, Any]] = None
     else:
         base_url = host.rstrip("/")
 
-    rpc_url = f"{base_url}/rpc.php"
+    rpc_url = f"{base_url}/ro-api.php"
     rpc_params: Dict[str, Any] = {
         "section": section,
         "token": token,
@@ -324,7 +328,7 @@ def query_omv_ro_api(section: str, extra_params: Optional[Dict[str, Any]] = None
 
     payload = json.dumps(
         {
-            "service": "RoApiProxy",
+            "service": "RoApi",
             "method": "query",
             "params": rpc_params,
             "options": None,
@@ -343,6 +347,8 @@ def query_omv_ro_api(section: str, extra_params: Optional[Dict[str, Any]] = None
         headers={
             "Content-Type": "application/json",
             "Accept": "application/json",
+            "Authorization": f"Bearer {token}",
+            "X-OMV-RO-Token": token,
             "User-Agent": "omv-ro-mcp/1.0",
         },
         method="POST",
@@ -398,14 +404,19 @@ def query_omv_ro_api(section: str, extra_params: Optional[Dict[str, Any]] = None
 
 def classify_omv_error(code: Any, message: str, section: str) -> Dict[str, Any]:
     msg_lower = (message or "").lower()
-    if "rpc service 'roapiproxy' not found" in msg_lower or "service 'roapiproxy' not found" in msg_lower:
+    if (
+        code == 404
+        or "rpc service 'roapi' not found" in msg_lower
+        or "service 'roapi' not found" in msg_lower
+        or "session not authenticated" in msg_lower
+    ):
         return {
             "failure_layer": "plugin_not_installed",
             "http_or_rpc_code": code,
             "remediation": (
-                "The `openmediavault-ro-api` plugin is not installed on this OpenMediaVault host yet. "
-                "Install `openmediavault-ro-api_1.0.0-1_all.deb` via SSH (`apt-get install -y ./openmediavault-ro-api_1.0.0-1_all.deb`) "
-                "or via the OMV Web UI (`System -> Scheduled Tasks -> Create -> Run` as root)."
+                "The `openmediavault-ro-api` plugin (`/ro-api.php`) is not installed on this OpenMediaVault host yet. "
+                "Add the plugin APT repository via `openmediavault-apt` (`System -> APT -> Repositories`) and install "
+                "`openmediavault-ro-api` in `System -> Plugins`, or install `openmediavault-ro-api_1.0.0-1_all.deb` via APT."
             ),
         }
     if code == 401 or "invalid read-only api token" in msg_lower:

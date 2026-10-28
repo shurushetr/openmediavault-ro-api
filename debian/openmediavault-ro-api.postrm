@@ -6,18 +6,18 @@ set -e
 
 remove_action() {
 	rm -f /run/openmediavault-ro-api.cache /run/openmediavault-ro-api.status.json
+	rm -f /etc/nginx/openmediavault-webgui.d/openmediavault-ro-api.conf
+	if command -v nginx >/dev/null 2>&1 && nginx -t >/dev/null 2>&1; then
+		systemctl reload nginx 2>/dev/null || service nginx reload 2>/dev/null || :
+	fi
 	dpkg-trigger update-workbench || :
 	dpkg-trigger restart-engined || :
-	if command -v omv-mkworkbench >/dev/null 2>&1; then
-		omv-mkworkbench all || :
-	fi
 }
 
 case "$1" in
 	purge|remove)
-		# Note: We intentionally preserve /config/services/roapi in
-		# /etc/openmediavault/config.xml so uninstalling or upgrading
-		# never deletes user settings or modifies config.xml destructively.
+		# Intentionally preserve /config/services/roapi in /etc/openmediavault/config.xml
+		# so uninstalling or upgrading never deletes user settings or modifies config.xml destructively.
 		remove_action
 	;;
 
