@@ -10,7 +10,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OUT_DIR="${1:-${SCRIPT_DIR}/dist}"
 PKG_NAME="openmediavault-ro-api"
-PKG_VER="1.0.0-1"
+PKG_VER="1.0.1-1"
 DEB_FILE="${OUT_DIR}/${PKG_NAME}_${PKG_VER}_all.deb"
 
 STAGE_DIR="$(mktemp -d "/tmp/${PKG_NAME}-build.XXXXXX")"
@@ -20,9 +20,9 @@ ROOT_DIR="${STAGE_DIR}/${PKG_NAME}_${PKG_VER}_all"
 mkdir -p "${ROOT_DIR}/DEBIAN"
 
 # Generate binary DEBIAN/control from canonical debian/control
-cat << 'EOF' > "${ROOT_DIR}/DEBIAN/control"
+cat << EOF > "${ROOT_DIR}/DEBIAN/control"
 Package: openmediavault-ro-api
-Version: 1.0.0-1
+Version: ${PKG_VER}
 Section: utils
 Plugin-Section: utilities
 Priority: optional

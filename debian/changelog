@@ -1,3 +1,11 @@
+openmediavault-ro-api (1.0.1-1) stable; urgency=low
+
+  * Fix adjacent string literal concatenation in OMVRpcServiceRoApi
+    that caused a PHP parse error on omv-engined startup.
+  * Guard ServiceManager::getService() boolean false return values.
+
+ -- shurushetr <shurushetr@gmail.com>  Wed, 28 Oct 2026 10:33:00 -0400
+
 openmediavault-ro-api (1.0.0-1) stable; urgency=low
 
   * Initial release of openmediavault Read-Only API & Infisical Auditor plugin.

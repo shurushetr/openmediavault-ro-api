@@ -7,7 +7,7 @@
 Give AI coding assistants (**Claude Desktop, Claude Code, Cursor, Google Antigravity, VS Code Copilot, Windsurf, Cline**), dashboards, and infrastructure auditors **safe, strictly read-only visibility** into your OpenMediaVault NAS—**without** giving them your `admin` password, SSH root access, or permission to modify anything.
 
 > [!NOTE]
-> **Tested Environment Disclaimer:** This plugin, its Workbench UI definitions, and the installation guide below were built and verified on **OpenMediaVault 7 (`sandworm` / Debian 12 Bookworm)** with **`openmediavault-apt 7.0.3-1`**. Web UI menu paths, APT repository forms, or internal RPC schemas may differ on other OpenMediaVault releases.
+> **Tested Environment Disclaimer:** This plugin, its Workbench UI definitions, and the installation guide below were built and verified on **OpenMediaVault 7.7.24-7 (`sandworm` / Debian 12 Bookworm)** with **`openmediavault-apt 7.0.3-1`**. Web UI menu paths, APT repository forms, or internal RPC schemas may differ on other OpenMediaVault releases.
 
 ---
 
@@ -46,27 +46,27 @@ By default, OpenMediaVault's web RPC gateway (`/rpc.php` -> `OMV\Rpc\Proxy\Json:
      ```text
      -----BEGIN PGP PUBLIC KEY BLOCK-----
      .
-     mQGNBGrh+tUBDADSkSfVoscHWBl+VVYXAbXG17L6S7ZR+S7+v+UJuOERrKHJdwva
-     pJI76L/FrnjcQS5GITnoOhZ3/aUGGiaHKq8kv3lo9yZcSeotCmYiwx+ki9UK3n0S
-     kDeAcD8q5RLW9QqB1kGZN9vGkBS3rWu964H0tqEe4s0T9+wnWyoxNIo/KX0C9zaR
-     sbduO5jY8glMJIycMtMNzp+BZVfgkhFJQ8MmDs2ZvJhRl6orCTKlw2JXvTRFaiZl
-     ccNcoNcEv4F/vDJskCP5qgp18k9AFE7Co5xFfdpqIS4j52cL3LlPJVMbHmBAwNke
-     lKDQHhyNQ24E7n4Qknd9flC1kt3Q/2aL732udJZ/gmQZRa3kFoTfDKorXwvDhCNX
-     1CFN1ScNqN2xGT1ZmXsS7BMxikU17i39DJPhH6v5o5gm6o8thzOx9HLVoctEv299
-     +W/JXvrCzFmSSP8KEpad332ZCJ3r1/wCrGd2xVG+vVsl7EbZSATfIF0cwSa4LuBi
-     vRriFTBpr+KN9AUAEQEAAbRKb3Blbm1lZGlhdmF1bHQtcm8tYXBpIEFyY2hpdmUg
+     mQGNBGriB+gBDADfqpceOsbvpiLtz3bKevGsEogPcxqlWbcgMcc+1TDwcbszVMvw
+     yrHV/jGHHySg9l6tSXyWXjTmafFBNVNWV5rdl01fe1Mh7aqnNDIUVdUdsPJ/Hz+r
+     XpmZyYLffNzuHRXSb/sX9fpKq09JmGVR4WCwAeVh37XmBHr52KMUHC8RcD7pyJ6m
+     0eGB3jrD59bB9WKR1tO7YFm1weovCJZ5w1uFlktPJKEPuQOt0OQzaBRXfdMUQ5oR
+     oN+ZzlKIu3IjxGe1KfDoa5mH/YUy4ZLYZN6GSb0s/h/FAWcjxGKqYnW2FK61A86j
+     guLa3BE/c3Jp3BLlDPbxTPIibc8CWkVnN4butH/B4PpcExrs34VJBHY70P2ONB+5
+     zvLf0Mqb77RKQhC5OxkiDo3kEow9f7mbkSarNQ1PzyhrKPqcdUbaJBpIdgfbj1Bx
+     xSErt7If/H0WxWN9yZ/zBPCunN7GSyn9NwuVow95kzAW65k48XPLZwAqa6lwS2tQ
+     U0SlxyQHVSMTqgEAEQEAAbRKb3Blbm1lZGlhdmF1bHQtcm8tYXBpIEFyY2hpdmUg
      QXV0b21hdGljIFNpZ25pbmcgS2V5IDxzaHVydXNoZXRyQGdtYWlsLmNvbT6JAc8E
-     EwEKADkWIQRHXPMRp8fz19GMG80qHNxcdqP32QUCauH61QMbLwQFCwkIBwIGFQoJ
-     CAsCBBYCAwECHgECF4AACgkQKhzcXHaj99ndvgwAs9I3mvGxKworA00MvzCbDz0i
-     FVEl8pJ02jYYWMAUKSuZG54mTMsvbMO+GsJeaa8WAVWp2VaU61CizsFCGGifAR/J
-     yRJNcmV/dvCpdE5XmaZaEu6tX85+ZaazWYilRCbgWqTxXw1YD9sMD/SyyONP1PnL
-     igCA7qqOIqTrDVAfUOGFgYTDjq8ymNMH/mbMz62dnfea3iSAvclgVYtHYE8aPK4D
-     FDjiQNnVTpGWrOtujRwkORoygBXbfca+c/Q0BodS0WHX2o6HdBEBQjxYeYA+i4Xb
-     uWOcqBxxA09gRiVpjp0Ainnn9KJiW55cTjVrcVYPMPnLbyThikLghoyvLhsQ0jBV
-     F91CHoHtuojMLH7ovhav1TjC7ZLr6rUEeyNbfFNc+gSQwrRKKq2VeM7VIbgnAi51
-     X7sr03zGQULZPVdIOragrL8S0+D1W1oL0r9pmVBKACbbe6ViFAjNBF2H42y+VTrL
-     dHcTde834E1Tsk1PJAVQzD5aHg6UPpRFVODe8Xli
-     =+rJC
+     EwEKADkWIQSftxLpC+uLfVr21YgWTCYuvkdKHQUCauIH6AMbLwQFCwkIBwIGFQoJ
+     CAsCBBYCAwECHgECF4AACgkQFkwmLr5HSh3I1AwAiNlXLe3J97XolLTsPEUWVsYG
+     S0qvfKqatnzBZnleM/b4nAq1JH4AOMoMj9y1j6XYD2a9wRPKUhPcNZZcv0iUDCZs
+     wq8Wm5pDlQttNtU3hzetvos35r4DftNQ6GvNQMM4RSOKm1KohdDcBsSLukLa8d9f
+     Q7ICV+dcOrFyymQhY8mOV4RJmXcc/EEQwbB/EjiVNUWkO9QCyEde1fOjiPsnVxlW
+     jxvocc7jCaGnu7q2eogZy0P20qICaozHJnicLd9ua/IN98K8nzUi6sbC01Mm85YB
+     xyW2YX5mqPSkcwDhvlDgFPQe7HGA5sHevcRH9GecvhGNJp1opIHr8EfQoPDsThxs
+     /ZPcuwmPCL1QT9fKK7WG7PPjSjXdwaniCEA1YL8G2pq6613lMg4B0/MyTIIJJ/Xa
+     Z5BEFXGh0oT5bdti0S5DRcV0jl/6lYM4mS4PUwLMlWAw4Sam9zzAxpW1I9NHuNWV
+     yD1l1dKHjouqna8Z517V5WLO2pcqZp0+aq1XgAH1
+     =F5zG
      -----END PGP PUBLIC KEY BLOCK-----
      ```
 3. Click **Save** and apply the yellow configuration banner.

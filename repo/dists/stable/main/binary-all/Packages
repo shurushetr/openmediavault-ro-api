@@ -1,5 +1,5 @@
 Package: openmediavault-ro-api
-Version: 1.0.0-1
+Version: 1.0.1-1
 Section: utils
 Plugin-Section: utilities
 Priority: optional
@@ -12,9 +12,9 @@ Description: openmediavault Read-Only API plugin
  granular per-scope access controls, automatic password and secret
  redaction, IP/CIDR allowlisting, native System Logs integration,
  and optional Infisical Universal Auth token synchronization.
-Filename: pool/main/o/openmediavault-ro-api/openmediavault-ro-api_1.0.0-1_all.deb
-Size: 21296
-MD5sum: dbb3861d4d4af9c2a6312b4a3fbc7d5e
-SHA1: d0c628717197c39ecf91540086c1e43032c16969
-SHA256: a0145215e13a4caeff3153124c7456572ab4478ba56c74eae95e7c477689989d
+Filename: pool/main/o/openmediavault-ro-api/openmediavault-ro-api_1.0.1-1_all.deb
+Size: 21436
+MD5sum: 2e5b0a2e97772a2b4a68f626b796b427
+SHA1: 11ffac1c69f1e363ef36e5413d3924521fcb402e
+SHA256: b0d1ac3a8662ccad847fecd4c56a9effd1b7884aa7371b9f1a441507213e1b57
 

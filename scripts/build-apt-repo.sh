@@ -20,14 +20,19 @@ DEB_BASENAME="$(basename "${DEB_INPUT}")"
 POOL_REL="pool/main/o/openmediavault-ro-api/${DEB_BASENAME}"
 
 mkdir -p "${REPO_OUT}/pool/main/o/openmediavault-ro-api"
-if [ "$(realpath "${DEB_INPUT}")" != "$(realpath "${REPO_OUT}/${DEB_BASENAME}" 2>/dev/null || true)" ]; then
-    cp -f "${DEB_INPUT}" "${REPO_OUT}/${DEB_BASENAME}"
-fi
+rm -f "${REPO_OUT}"/openmediavault-ro-api_*.deb "${REPO_OUT}/pool/main/o/openmediavault-ro-api"/openmediavault-ro-api_*.deb
+cp -f "${DEB_INPUT}" "${REPO_OUT}/${DEB_BASENAME}"
 cp -f "${DEB_INPUT}" "${REPO_OUT}/${POOL_REL}"
 
-# Ephemeral or persistent GPG signing key for APT repository metadata
-GNUPG_DIR="${GNUPGHOME:-${REPO_OUT}/.gnupg- build}"
-trap 'rm -rf "${REPO_OUT}/.gnupg- build"' EXIT
+# Persistent or ephemeral GPG signing key for APT repository metadata
+if [ -n "${GNUPGHOME:-}" ]; then
+    GNUPG_DIR="${GNUPGHOME}"
+elif [ -d "${HOME:-/nonexistent}/.gnupg" ] && [ -w "${HOME}/.gnupg" ]; then
+    GNUPG_DIR="${HOME}/.gnupg"
+else
+    GNUPG_DIR="${REPO_OUT}/.gnupg-build"
+    trap 'rm -rf "${REPO_OUT}/.gnupg-build"' EXIT
+fi
 mkdir -p "${GNUPG_DIR}"
 chmod 0700 "${GNUPG_DIR}"
 

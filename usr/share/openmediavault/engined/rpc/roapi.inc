@@ -13,7 +13,7 @@
  */
 class OMVRpcServiceRoApi extends \OMV\Rpc\ServiceAbstract
 {
-    private const PLUGIN_VERSION = "1.0.0-1";
+    private const PLUGIN_VERSION = "1.0.1-1";
     private const CACHE_FILE = "/run/openmediavault-ro-api.cache";
     private const STATUS_FILE = "/run/openmediavault-ro-api.status.json";
     private const LOG_FILE = "/var/log/openmediavault-ro-api.log";
@@ -703,7 +703,7 @@ class OMVRpcServiceRoApi extends \OMV\Rpc\ServiceAbstract
 
         foreach ($catalog as $serviceName => $calls) {
             $svc = $mgr->getService($serviceName);
-            if ($svc === null) {
+            if (!is_object($svc)) {
                 $notInstalledServices[] = $serviceName;
                 continue;
             }
@@ -729,7 +729,7 @@ class OMVRpcServiceRoApi extends \OMV\Rpc\ServiceAbstract
             "config_xml_services" => $servicesConfigXml,
             "config_xml_omvextras" => $omvExtrasConfigXml,
             "available_rpc_discovery_hint" => (
-                "If another OMV-Extras or third-party plugin is installed, call section='rpc_inspect' "
+                "If another OMV-Extras or third-party plugin is installed, call section='rpc_inspect' " .
                 "(or omv_inspect_rpc) with empty rpc_service to discover all registered RPC services and their read-only methods."
             ),
         ];
@@ -749,7 +749,7 @@ class OMVRpcServiceRoApi extends \OMV\Rpc\ServiceAbstract
                 "total_services" => count($discovered),
                 "services" => $discovered,
                 "usage_hint" => (
-                    "Pass rpc_service='<ServiceName>' and rpc_method='<ReadOnlyMethodName>' "
+                    "Pass rpc_service='<ServiceName>' and rpc_method='<ReadOnlyMethodName>' " .
                     "(plus optional JSON string rpc_params) to call any method listed under readonly_methods."
                 ),
             ];
@@ -757,7 +757,7 @@ class OMVRpcServiceRoApi extends \OMV\Rpc\ServiceAbstract
 
         $mgr = \OMV\Rpc\ServiceManager::getInstance();
         $svc = $mgr->getService($rpcService);
-        if ($svc === null) {
+        if (!is_object($svc)) {
             throw new \OMV\HttpErrorException(
                 404,
                 sprintf(
@@ -844,7 +844,7 @@ class OMVRpcServiceRoApi extends \OMV\Rpc\ServiceAbstract
                 }
                 $svcName = (string)$inst->getName();
                 $registered = $mgr->getService($svcName);
-                if ($registered === null) {
+                if (!is_object($registered)) {
                     continue;
                 }
                 $roMethods = [];
