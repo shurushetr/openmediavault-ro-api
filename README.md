@@ -1,10 +1,13 @@
-# `openmediavault-ro-api` — Read-Only API & MCP Server for OpenMediaVault 7 / 8
+# `openmediavault-ro-api` — Read-Only API & MCP Server for OpenMediaVault 7
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![OpenMediaVault](https://img.shields.io/badge/OpenMediaVault-7.x%20%7C%208.x-5aa3e8)](https://www.openmediavault.org/)
+[![OpenMediaVault](https://img.shields.io/badge/Tested%20on%20OMV-7.x%20(Sandworm)-5aa3e8)](https://www.openmediavault.org/)
 [![MCP Compatible](https://img.shields.io/badge/MCP-12%20Read--Only%20Tools-10a37f)](https://modelcontextprotocol.io/)
 
 Give AI coding assistants (**Claude Desktop, Claude Code, Cursor, Google Antigravity, VS Code Copilot, Windsurf, Cline**), dashboards, and infrastructure auditors **safe, strictly read-only visibility** into your OpenMediaVault NAS—**without** giving them your `admin` password, SSH root access, or permission to modify anything.
+
+> [!NOTE]
+> **Tested Environment Disclaimer:** This plugin, its Workbench UI definitions, and the installation guide below were built and verified on **OpenMediaVault 7 (`sandworm` / Debian 12 Bookworm)** with **`openmediavault-apt 7.0.3-1`**. Web UI menu paths, APT repository forms, or internal RPC schemas may differ on other OpenMediaVault releases.
 
 ---
 
@@ -30,16 +33,62 @@ By default, OpenMediaVault's web RPC gateway (`/rpc.php` -> `OMV\Rpc\Proxy\Json:
 
 ## Quick Start (3 Minutes)
 
-### Step 1: Install the Plugin in OpenMediaVault 7 / 8 (100% Web UI)
+### Step 1: Install the Plugin in OpenMediaVault 7 (100% Web UI)
 
 1. In the OpenMediaVault Web UI, go to **`System` -> `Plugins`**, search for **`openmediavault-apt`**, install it if not already installed, and apply the yellow configuration banner.
 2. Go to **`System` -> `Update Management` -> `Settings` -> `Other Software`** and click **`Create`** (`+`):
    - **Enabled:** Checked
    - **Types:** `deb`
-   - **URIs:** `https://shurushetr.github.io/openmediavault-ro-api`
+   - **URIs:** `https://raw.githubusercontent.com/shurushetr/openmediavault-ro-api/main/repo`
    - **Suites:** `sandworm`
    - **Components:** `main`
-   - **GPG Key:** Paste the armored public key from [`openmediavault-ro-api.asc`](https://shurushetr.github.io/openmediavault-ro-api/openmediavault-ro-api.asc)
+   - **GPG Key:** Paste the armored public key below (also in [`repo/openmediavault-ro-api.asc`](repo/openmediavault-ro-api.asc)):
+     ```text
+     -----BEGIN PGP PUBLIC KEY BLOCK-----
+
+     mQGNBGrh+tUBDADSkSfVoscHWBl+VVYXAbXG17L6S7ZR+S7+v+UJuOERrKHJdwva
+     pJI76L/FrnjcQS5GITnoOhZ3/aUGGiaHKq8kv3lo9yZcSeotCmYiwx+ki9UK3n0S
+     kDeAcD8q5RLW9QqB1kGZN9vGkBS3rWu964H0tqEe4s0T9+wnWyoxNIo/KX0C9zaR
+     sbduO5jY8glMJIycMtMNzp+BZVfgkhFJQ8MmDs2ZvJhRl6orCTKlw2JXvTRFaiZl
+     ccNcoNcEv4F/vDJskCP5qgp18k9AFE7Co5xFfdpqIS4j52cL3LlPJVMbHmBAwNke
+     lKDQHhyNQ24E7n4Qknd9flC1kt3Q/2aL732udJZ/gmQZRa3kFoTfDKorXwvDhCNX
+     1CFN1ScNqN2xGT1ZmXsS7BMxikU17i39DJPhH6v5o5gm6o8thzOx9HLVoctEv299
+     +W/JXvrCzFmSSP8KEpad332ZCJ3r1/wCrGd2xVG+vVsl7EbZSATfIF0cwSa4LuBi
+     vRriFTBpr+KN9AUAEQEAAbRKb3Blbm1lZGlhdmF1bHQtcm8tYXBpIEFyY2hpdmUg
+     QXV0b21hdGljIFNpZ25pbmcgS2V5IDxzaHVydXNoZXRyQGdtYWlsLmNvbT6JAc8E
+     EwEKADkWIQRHXPMRp8fz19GMG80qHNxcdqP32QUCauH61QMbLwQFCwkIBwIGFQoJ
+     CAsCBBYCAwECHgECF4AACgkQKhzcXHaj99ndvgwAs9I3mvGxKworA00MvzCbDz0i
+     FVEl8pJ02jYYWMAUKSuZG54mTMsvbMO+GsJeaa8WAVWp2VaU61CizsFCGGifAR/J
+     yRJNcmV/dvCpdE5XmaZaEu6tX85+ZaazWYilRCbgWqTxXw1YD9sMD/SyyONP1PnL
+     igCA7qqOIqTrDVAfUOGFgYTDjq8ymNMH/mbMz62dnfea3iSAvclgVYtHYE8aPK4D
+     FDjiQNnVTpGWrOtujRwkORoygBXbfca+c/Q0BodS0WHX2o6HdBEBQjxYeYA+i4Xb
+     uWOcqBxxA09gRiVpjp0Ainnn9KJiW55cTjVrcVYPMPnLbyThikLghoyvLhsQ0jBV
+     F91CHoHtuojMLH7ovhav1TjC7ZLr6rUEeyNbfFNc+gSQwrRKKq2VeM7VIbgnAi51
+     X7sr03zGQULZPVdIOragrL8S0+D1W1oL0r9pmVBKACbbe6ViFAjNBF2H42y+VTrL
+     dHcTde834E1Tsk1PJAVQzD5aHg6UPpRFVODe8XlimQGNBGrh830BDACaknpwUTXs
+     92UeE7U2ertL3mi7YBrL7AcJAQi0MyQzhgX8y/NRMDslNAT5cF5wkzh5nj3NL+0s
+     lOAivTT5JKc1VNd4rMH+7DV1d/NZUB8/oz+gTSmpdR4PBXWE7MJWuyWjDFXpUvzp
+     S6vTRoU1rZdSV+VfclprdaivHBvaw3Xvd9ayaQxeT6WuM6T4qNmC6yj17eRXVJ7c
+     S/60sEVb+Tbl18VKMP1ib7GYlrGMvEy8N9+MbxTwtIZoBIdYi2loThQa2bg1Iq6V
+     M9jnAxlNjBdM4tMUxhuEv3RG3ZDHA21ZQk2Rq3SRA40o78LaLUT685TWsn1VpcOF
+     bJeICpOPVX76+5l7eBR+S3nGOO/ZNpfBfWBqfLOYQFsQsvw3vSjRKlvv+uTv5Ier
+     SvLac3vXdtPRbRgtCp1NZXzHAbwJxcb4jbLzKtuoY9vyA2cD81+S7HfDQTGZ0s2F
+     bLD008fJS0QRVpUAYj3+z/ZFu86Ktv26YP1WJzOOFMGmfSJO0FU3uA8AEQEAAbRK
+     b3Blbm1lZGlhdmF1bHQtcm8tYXBpIEFyY2hpdmUgQXV0b21hdGljIFNpZ25pbmcg
+     S2V5IDxzaHVydXNoZXRyQGdtYWlsLmNvbT6JAc8EEwEKADkWIQS7XqxPLfnEVS7q
+     XavmWLAycJUrSAUCauHzfQMbLwQFCwkIBwIGFQoJCAsCBBYCAwECHgECF4AACgkQ
+     5liwMnCVK0gHpgv/WpaWKf6g+kZ4La9GFfeQZ2IcGS96MeviHvPF+poFE2vmyzVP
+     +Kp/hnrfVx38jDT5egRj/D5z43KeFnVBaNh0owLE+OLwZ7E8weFNCSDHrdnVr4Yr
+     EczOOHX933CbKwIp41DNY/O7KCG6mzK4eMxFVcxLGmz4fu0Og7Qd9J+q0Gd0FsQF
+     Pc6RnB4A1/EFcqWz9TzhA6TvN+udiBGUzBOV6qkgKdfe5v4D0bGKmVFh9ykIj5ke
+     Ok2XKU27CODSa/S0MzUBI6+QGZPFfi1CflUd8WCZphpgaf/IUvsM1FhfElQFAWZq
+     L8HTkO67JlKbWtmLOKIiKKFuz05PALs04j8TezmT5OjcvK2QQmk0xrfd9hW45QZf
+     8i52+wE2MueiglV1wqIzwjGuCWu6Wq+/UqUTF5MXGRr/B76dB0zPkYTJc7LerypP
+     gBlt2WFrDH869reVFU7BTNGLH9pXuMFIldBWAqQg1O0sqR1+VmQGqeLZ3uC1jA+Y
+     aHDK/PWUFp1uL7sq
+     =0vAm
+     -----END PGP PUBLIC KEY BLOCK-----
+     ```
 3. Click **Save** and apply the yellow configuration banner.
 4. Go to **`System` -> `Plugins`**, click **`Check for new plugins`** (`🔍`), search for **`openmediavault-ro-api`**, select it, and click **`Install`** (`⬇`).
 

@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REPO_URL="${OMV_RO_REPO_URL:-https://raw.githubusercontent.com/shurushetr/openmediavault-ro-api/main/repo}"
+KEYRING="/usr/share/keyrings/openmediavault-ro-api-keyring.gpg"
+SOURCES_FILE="/etc/apt/sources.list.d/openmediavault-ro-api.sources"
+
+echo ":: Installing openmediavault-ro-api APT keyring..."
+curl -fsSL "${REPO_URL}/openmediavault-ro-api-keyring.gpg" -o "${KEYRING}"
+chmod 0644 "${KEYRING}"
+
+echo ":: Configuring DEB822 APT source (${SOURCES_FILE})..."
+cat << DEB822 > "${SOURCES_FILE}"
+Types: deb
+URIs: ${REPO_URL}
+Suites: sandworm
+Components: main
+Signed-By: ${KEYRING}
+DEB822
+
+echo ":: Updating APT cache and installing openmediavault-ro-api..."
+apt-get update
+DEBIAN_FRONTEND=noninteractive apt-get install -y openmediavault-ro-api
+echo ":: openmediavault-ro-api installed successfully! Refresh your OpenMediaVault Web UI (Services -> Read-Only API)."
