@@ -64,6 +64,14 @@
 					"type": "boolean",
 					"required": true
 				},
+				"allow_omv_extras": {
+					"type": "boolean",
+					"required": true
+				},
+				"allow_rpc_inspect": {
+					"type": "boolean",
+					"required": true
+				},
 				"allow_configxml": {
 					"type": "boolean",
 					"required": true
@@ -155,6 +163,18 @@
 					"type": "integer",
 					"minimum": 1,
 					"maximum": 500,
+					"required": false
+				},
+				"rpc_service": {
+					"type": "string",
+					"required": false
+				},
+				"rpc_method": {
+					"type": "string",
+					"required": false
+				},
+				"rpc_params": {
+					"type": "string",
 					"required": false
 				},
 				"_client_ip": {

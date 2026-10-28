@@ -108,6 +108,16 @@ data:
         hint: _("Allow reading APT repository settings, pending package upgrades, and installed OMV plugins (section=apt_and_plugins).")
         value: true
       - type: checkbox
+        name: allow_omv_extras
+        label: _("OMV-Extras & third-party plugin runtime state")
+        hint: _("Allow reading live runtime status and settings of installed OMV-Extras and community plugins such as Compose/Docker, MergerFS, SnapRAID, ZFS, KVM, WireGuard, BorgBackup, RemoteMount, LUKS, iSCSI, and CPU Temp (section=omv_extras).")
+        value: true
+      - type: checkbox
+        name: allow_rpc_inspect
+        label: _("Dynamic Read-Only RPC discovery & inspector")
+        hint: _("Allow discovering registered OMV/plugin RPC services and calling strictly read-only methods (get*, enumerate*, list*, is*, has*, status*) with automatic secret redaction while blocking all write/exec methods (section=rpc_inspect).")
+        value: true
+      - type: checkbox
         name: allow_configxml
         label: _("Redacted config.xml export")
         hint: _("Allow reading the parsed /etc/openmediavault/config.xml tree with all secret/password fields automatically masked (section=config_xml).")

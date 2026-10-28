@@ -42,11 +42,10 @@ class OMVRpcServiceRoApi extends \OMV\Rpc\ServiceAbstract
         ]);
         $db = \OMV\Config\Database::getInstance();
         $cfg = $db->getAssoc("conf.service.roapi");
-        if (!array_key_exists("allow_logs", $cfg)) {
-            $cfg["allow_logs"] = true;
-        }
-        if (!array_key_exists("allow_diagnostics", $cfg)) {
-            $cfg["allow_diagnostics"] = true;
+        foreach (["allow_omv_extras", "allow_rpc_inspect", "allow_logs", "allow_diagnostics"] as $newKey) {
+            if (!array_key_exists($newKey, $cfg)) {
+                $cfg[$newKey] = true;
+            }
         }
         return $cfg;
     }
@@ -192,6 +191,22 @@ class OMVRpcServiceRoApi extends \OMV\Rpc\ServiceAbstract
                 $this->assertScopeEnabled($cfg, "allow_apt", "apt_and_plugins");
                 $data = $this->collectAptAndPlugins($adminCtx);
                 break;
+            case "omv_extras":
+            case "omvextras":
+            case "extras":
+            case "plugins_runtime":
+                $this->assertScopeEnabled($cfg, "allow_omv_extras", "omv_extras");
+                $data = $this->collectOmvExtras($adminCtx);
+                break;
+            case "rpc_inspect":
+            case "rpc":
+            case "inspect_rpc":
+                $this->assertScopeEnabled($cfg, "allow_rpc_inspect", "rpc_inspect");
+                $rpcService = trim((string)($params['rpc_service'] ?? ''));
+                $rpcMethod = trim((string)($params['rpc_method'] ?? ''));
+                $rpcParamsJson = trim((string)($params['rpc_params'] ?? ''));
+                $data = $this->collectRpcInspect($adminCtx, $rpcService, $rpcMethod, $rpcParamsJson);
+                break;
             case "config":
             case "config_xml":
                 $this->assertScopeEnabled($cfg, "allow_configxml", "config_xml");
@@ -236,6 +251,9 @@ class OMVRpcServiceRoApi extends \OMV\Rpc\ServiceAbstract
                 if (!empty($cfg['allow_apt'])) {
                     $data["apt_and_plugins"] = $this->collectAptAndPlugins($adminCtx);
                 }
+                if (!array_key_exists('allow_omv_extras', $cfg) || !empty($cfg['allow_omv_extras'])) {
+                    $data["omv_extras"] = $this->collectOmvExtras($adminCtx);
+                }
                 if (!array_key_exists('allow_diagnostics', $cfg) || !empty($cfg['allow_diagnostics'])) {
                     $data["diagnostics"] = $this->collectDiagnostics($adminCtx, $cfg, $clientIp, 50);
                 }
@@ -245,7 +263,7 @@ class OMVRpcServiceRoApi extends \OMV\Rpc\ServiceAbstract
                 throw new \OMV\HttpErrorException(
                     400,
                     sprintf(
-                        "Unsupported read-only section '%s'. Valid sections: overview, disks, storage, shares, ups, network, apt, config_xml, logs, diagnostics, all.",
+                        "Unsupported read-only section '%s'. Valid sections: overview, disks, storage, shares, ups, network, apt, omv_extras, rpc_inspect, config_xml, logs, diagnostics, all.",
                         $section
                     )
                 );
@@ -305,6 +323,8 @@ class OMVRpcServiceRoApi extends \OMV\Rpc\ServiceAbstract
             "ups" => "allow_ups",
             "network" => "allow_network",
             "apt" => "allow_apt",
+            "omv_extras" => "allow_omv_extras",
+            "rpc_inspect" => "allow_rpc_inspect",
             "config_xml" => "allow_configxml",
             "logs" => "allow_logs",
             "diagnostics" => "allow_diagnostics",
@@ -548,6 +568,347 @@ class OMVRpcServiceRoApi extends \OMV\Rpc\ServiceAbstract
             "upgradable_packages" => $this->safeRpc("Apt", "enumerateUpgraded", null, $ctx),
             "installed_plugins" => $installedPlugins,
         ];
+    }
+
+    /**
+     * Automatically detect and audit installed OMV-Extras and community/official
+     * plugins (Compose/Docker, MergerFS, SnapRAID, ZFS, KVM, WireGuard, BorgBackup,
+     * RemoteMount, LUKS, MD RAID, iSCSI/TGT, CpuTemp, Autoshutdown, Flashmemory,
+     * Rsnapshot, UsbBackup, Symlinks, ResetPerms, Scripts, ClamAV, Bcache, FTP/SFTP, etc.).
+     */
+    private function collectOmvExtras(array $ctx): array
+    {
+        $catalog = [
+            "OmvExtras" => [
+                ["method" => "get", "params" => null],
+                ["method" => "getSettings", "params" => null],
+                ["method" => "getKernel", "params" => null],
+            ],
+            "Compose" => [
+                ["method" => "get", "params" => null],
+                ["method" => "getFileList", "params" => ["start" => 0, "limit" => -1]],
+                ["method" => "getServicesList", "params" => ["start" => 0, "limit" => -1]],
+                ["method" => "getContainerList", "params" => ["start" => 0, "limit" => -1]],
+                ["method" => "getStats", "params" => ["start" => 0, "limit" => -1]],
+                ["method" => "getVolumes", "params" => ["start" => 0, "limit" => -1]],
+                ["method" => "getNetworks", "params" => ["start" => 0, "limit" => -1]],
+                ["method" => "getImages", "params" => ["start" => 0, "limit" => -1]],
+            ],
+            "Mergerfs" => [
+                ["method" => "getPoolList", "params" => ["start" => 0, "limit" => -1]],
+            ],
+            "SnapRaid" => [
+                ["method" => "getSettings", "params" => null],
+                ["method" => "getArrayList", "params" => ["start" => 0, "limit" => -1]],
+                ["method" => "getDriveList", "params" => ["start" => 0, "limit" => -1]],
+                ["method" => "getRuleList", "params" => ["start" => 0, "limit" => -1]],
+            ],
+            "Zfs" => [
+                ["method" => "getSettings", "params" => null],
+                ["method" => "listPools", "params" => ["start" => 0, "limit" => -1]],
+                ["method" => "getAll", "params" => ["start" => 0, "limit" => -1]],
+            ],
+            "Kvm" => [
+                ["method" => "getVmList", "params" => ["start" => 0, "limit" => -1]],
+                ["method" => "getPoolList", "params" => ["start" => 0, "limit" => -1]],
+                ["method" => "getNetList", "params" => ["start" => 0, "limit" => -1]],
+                ["method" => "getVcpu", "params" => null],
+            ],
+            "Wireguard" => [
+                ["method" => "getTunnelList", "params" => ["start" => 0, "limit" => -1]],
+                ["method" => "getClientList", "params" => ["start" => 0, "limit" => -1]],
+                ["method" => "getCustomList", "params" => ["start" => 0, "limit" => -1]],
+            ],
+            "BorgBackup" => [
+                ["method" => "getSettings", "params" => null],
+                ["method" => "getRepoList", "params" => ["start" => 0, "limit" => -1]],
+                ["method" => "getArchiveList", "params" => ["start" => 0, "limit" => -1]],
+                ["method" => "getEnvVarList", "params" => ["start" => 0, "limit" => -1]],
+            ],
+            "RemoteMount" => [
+                ["method" => "getList", "params" => ["start" => 0, "limit" => -1]],
+            ],
+            "Luks" => [
+                ["method" => "enumerateContainers", "params" => null],
+                ["method" => "getContainersList", "params" => ["start" => 0, "limit" => -1]],
+            ],
+            "Md" => [
+                ["method" => "getList", "params" => ["start" => 0, "limit" => -1]],
+            ],
+            "RaidMgmt" => [
+                ["method" => "getList", "params" => ["start" => 0, "limit" => -1]],
+            ],
+            "Tgt" => [
+                ["method" => "getSettings", "params" => null],
+                ["method" => "getTargetList", "params" => ["start" => 0, "limit" => -1]],
+                ["method" => "getImageList", "params" => ["start" => 0, "limit" => -1]],
+            ],
+            "CpuTemp" => [
+                ["method" => "get", "params" => null],
+            ],
+            "Autoshutdown" => [
+                ["method" => "getSettings", "params" => null],
+            ],
+            "Flashmemory" => [
+                ["method" => "get", "params" => null],
+            ],
+            "Rsnapshot" => [
+                ["method" => "getList", "params" => ["start" => 0, "limit" => -1]],
+            ],
+            "UsbBackup" => [
+                ["method" => "getList", "params" => ["start" => 0, "limit" => -1]],
+            ],
+            "Symlinks" => [
+                ["method" => "getList", "params" => ["start" => 0, "limit" => -1]],
+            ],
+            "ResetPerms" => [
+                ["method" => "getSharedFolderInUseList", "params" => ["start" => 0, "limit" => -1]],
+            ],
+            "Scripts" => [
+                ["method" => "getSettings", "params" => null],
+                ["method" => "getList", "params" => ["start" => 0, "limit" => -1]],
+            ],
+            "Hosts" => [
+                ["method" => "get", "params" => null],
+            ],
+            "Ftp" => [
+                ["method" => "getSettings", "params" => null],
+                ["method" => "getShareList", "params" => ["start" => 0, "limit" => -1]],
+            ],
+            "Sftp" => [
+                ["method" => "getSettings", "params" => null],
+                ["method" => "getShareList", "params" => ["start" => 0, "limit" => -1]],
+            ],
+            "ClamAV" => [
+                ["method" => "getSettings", "params" => null],
+                ["method" => "getJobList", "params" => ["start" => 0, "limit" => -1]],
+            ],
+            "Bcache" => [
+                ["method" => "enumerateBcache", "params" => null],
+                ["method" => "enumerateCset", "params" => null],
+            ],
+            "Podman" => [
+                ["method" => "get", "params" => null],
+                ["method" => "getPodList", "params" => ["start" => 0, "limit" => -1]],
+            ],
+            "MiniDLNA" => [
+                ["method" => "getSettings", "params" => null],
+                ["method" => "getShareList", "params" => ["start" => 0, "limit" => -1]],
+            ],
+        ];
+
+        $mgr = \OMV\Rpc\ServiceManager::getInstance();
+        $activePluginRuntime = [];
+        $notInstalledServices = [];
+
+        foreach ($catalog as $serviceName => $calls) {
+            $svc = $mgr->getService($serviceName);
+            if ($svc === null) {
+                $notInstalledServices[] = $serviceName;
+                continue;
+            }
+            $svcResults = [];
+            foreach ($calls as $c) {
+                $m = $c["method"];
+                if (method_exists($svc, "hasMethod") && !$svc->hasMethod($m)) {
+                    continue;
+                }
+                $svcResults[$m] = $this->safeRpc($serviceName, $m, $c["params"], $ctx);
+            }
+            $activePluginRuntime[$serviceName] = $svcResults;
+        }
+
+        $cfgTree = $this->collectRedactedConfigXml();
+        $servicesConfigXml = $cfgTree["services"] ?? [];
+        $omvExtrasConfigXml = $cfgTree["system"]["omvextras"] ?? null;
+
+        return [
+            "detected_plugin_rpc_services" => array_keys($activePluginRuntime),
+            "not_installed_catalog_services" => $notInstalledServices,
+            "live_plugin_runtime" => $activePluginRuntime,
+            "config_xml_services" => $servicesConfigXml,
+            "config_xml_omvextras" => $omvExtrasConfigXml,
+            "available_rpc_discovery_hint" => (
+                "If another OMV-Extras or third-party plugin is installed, call section='rpc_inspect' "
+                "(or omv_inspect_rpc) with empty rpc_service to discover all registered RPC services and their read-only methods."
+            ),
+        ];
+    }
+
+    /**
+     * Discover all registered RPC services in omv-engined or invoke a strictly
+     * validated read-only RPC method on any core or third-party OMV plugin.
+     */
+    private function collectRpcInspect(array $ctx, string $rpcService, string $rpcMethod, string $rpcParamsJson): array
+    {
+        $discovered = $this->discoverRpcServices();
+
+        if ($rpcService === "" || strtolower($rpcService) === "discover" || $rpcMethod === "") {
+            return [
+                "mode" => "discover",
+                "total_services" => count($discovered),
+                "services" => $discovered,
+                "usage_hint" => (
+                    "Pass rpc_service='<ServiceName>' and rpc_method='<ReadOnlyMethodName>' "
+                    "(plus optional JSON string rpc_params) to call any method listed under readonly_methods."
+                ),
+            ];
+        }
+
+        $mgr = \OMV\Rpc\ServiceManager::getInstance();
+        $svc = $mgr->getService($rpcService);
+        if ($svc === null) {
+            throw new \OMV\HttpErrorException(
+                404,
+                sprintf(
+                    "RPC service '%s' is not registered in omv-engined. Available services: [%s].",
+                    $rpcService,
+                    implode(", ", array_keys($discovered))
+                )
+            );
+        }
+
+        if (method_exists($svc, "hasMethod") && !$svc->hasMethod($rpcMethod)) {
+            $svcInfo = $discovered[$svc->getName()] ?? ["readonly_methods" => []];
+            throw new \OMV\HttpErrorException(
+                404,
+                sprintf(
+                    "RPC method '%s::%s' does not exist. Allowed read-only methods on '%s': [%s].",
+                    $svc->getName(),
+                    $rpcMethod,
+                    $svc->getName(),
+                    implode(", ", $svcInfo["readonly_methods"] ?? [])
+                )
+            );
+        }
+
+        $canonicalService = $svc->getName();
+        if (!$this->isReadOnlyRpcMethod($canonicalService, $rpcMethod)) {
+            $this->logEvent(
+                "WARNING",
+                "rpc_inspect",
+                $this->currentClientIp,
+                sprintf("Blocked non-read-only RPC inspect attempt: %s::%s", $canonicalService, $rpcMethod)
+            );
+            $svcInfo = $discovered[$canonicalService] ?? ["readonly_methods" => []];
+            throw new \OMV\HttpErrorException(
+                403,
+                sprintf(
+                    "RPC method '%s::%s' is blocked by the Read-Only API guard (only strictly read-only get*/enumerate*/list*/is*/has*/status* methods are permitted). Allowed read-only methods on '%s': [%s].",
+                    $canonicalService,
+                    $rpcMethod,
+                    $canonicalService,
+                    implode(", ", $svcInfo["readonly_methods"] ?? [])
+                )
+            );
+        }
+
+        $callParams = null;
+        if ($rpcParamsJson !== "") {
+            $decoded = @json_decode($rpcParamsJson, true);
+            if (!is_array($decoded) && $rpcParamsJson !== "null") {
+                throw new \OMV\HttpErrorException(400, "Invalid JSON in rpc_params. Must be a JSON object or empty.");
+            }
+            $callParams = $decoded;
+        } elseif (preg_match('/(getList|List)$/i', $rpcMethod)) {
+            $callParams = ["start" => 0, "limit" => -1];
+        }
+
+        $result = $this->safeRpc($canonicalService, $rpcMethod, $callParams, $ctx);
+        return [
+            "mode" => "call",
+            "rpc_service" => $canonicalService,
+            "rpc_method" => $rpcMethod,
+            "rpc_params_used" => $callParams,
+            "result" => $result,
+        ];
+    }
+
+    private function discoverRpcServices(): array
+    {
+        $mgr = \OMV\Rpc\ServiceManager::getInstance();
+        $services = [];
+
+        foreach (get_declared_classes() as $cls) {
+            if (!is_subclass_of($cls, "\\OMV\\Rpc\\ServiceAbstract")) {
+                continue;
+            }
+            try {
+                $ref = new \ReflectionClass($cls);
+                if ($ref->isAbstract()) {
+                    continue;
+                }
+                $inst = $ref->newInstanceWithoutConstructor();
+                if (!method_exists($inst, "getName")) {
+                    continue;
+                }
+                $svcName = (string)$inst->getName();
+                $registered = $mgr->getService($svcName);
+                if ($registered === null) {
+                    continue;
+                }
+                $roMethods = [];
+                $blockedMethods = [];
+                foreach ($ref->getMethods(\ReflectionMethod::IS_PUBLIC) as $m) {
+                    $mName = $m->getName();
+                    if (
+                        $m->getDeclaringClass()->getName() !== $cls ||
+                        in_array($mName, ["__construct", "getName", "initialize"], true)
+                    ) {
+                        continue;
+                    }
+                    if (method_exists($registered, "hasMethod") && !$registered->hasMethod($mName)) {
+                        continue;
+                    }
+                    if ($this->isReadOnlyRpcMethod($svcName, $mName)) {
+                        $roMethods[] = $mName;
+                    } else {
+                        $blockedMethods[] = $mName;
+                    }
+                }
+                sort($roMethods);
+                sort($blockedMethods);
+                $services[$svcName] = [
+                    "class" => $cls,
+                    "readonly_methods" => $roMethods,
+                    "blocked_mutating_methods" => $blockedMethods,
+                ];
+            } catch (\Throwable $e) {
+                continue;
+            }
+        }
+        ksort($services);
+        return $services;
+    }
+
+    private function isReadOnlyRpcMethod(string $serviceName, string $methodName): bool
+    {
+        $blockedServices = ["roapi", "roapiproxy", "session", "exec"];
+        if (in_array(strtolower($serviceName), $blockedServices, true)) {
+            return false;
+        }
+        if (!preg_match('/^(get|enumerate|list|is|has|stat|status)([A-Z_][A-Za-z0-9_]*)?$/', $methodName)) {
+            return false;
+        }
+        $forbiddenSubstrings = [
+            "exec", "command", "shell", "login", "logout", "auth",
+            "passwd", "password", "secret", "token", "privatekey",
+            "download", "upload", "write", "delete", "remove",
+            "destroy", "wipe", "format", "kill", "set", "create",
+            "apply", "rollback",
+        ];
+        $camelWords = preg_split('/(?=[A-Z])|_/', $methodName) ?: [];
+        foreach ($camelWords as $w) {
+            $wl = strtolower($w);
+            // Allow "Settings" / "Set" only as part of the noun "Settings" (e.g. getSettings)
+            if ($wl === "set" && strtolower($methodName) !== "getsettings") {
+                return false;
+            }
+            if ($wl !== "set" && in_array($wl, $forbiddenSubstrings, true)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private function collectRedactedConfigXml(): array

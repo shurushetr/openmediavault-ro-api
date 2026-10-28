@@ -105,6 +105,51 @@ TOOLS = [
         "properties": {},
     },
     {
+        "name": "omv_get_omv_extras",
+        "section": "omv_extras",
+        "description": (
+            "Auto-detect and audit installed OMV-Extras and community/official plugins: live runtime status "
+            "and settings for Compose/Docker, MergerFS, SnapRAID, ZFS, KVM/Libvirt, WireGuard, BorgBackup, "
+            "RemoteMount, LUKS, MD RAID, iSCSI/TGT, CpuTemp, Autoshutdown, Flashmemory, Rsnapshot, UsbBackup, "
+            "Symlinks, ResetPerms, Scripts, ClamAV, Bcache, FTP/SFTP, and redacted /config/services/* XML nodes."
+        ),
+        "properties": {},
+    },
+    {
+        "name": "omv_inspect_rpc",
+        "section": "rpc_inspect",
+        "description": (
+            "Discover all registered RPC services in omv-engined (including any newly installed OMV-Extras "
+            "or third-party plugin) or call any strictly read-only RPC method (get*, enumerate*, list*, is*, "
+            "has*, status*) with automatic pagination and server-side secret redaction."
+        ),
+        "properties": {
+            "rpc_service": {
+                "type": "string",
+                "description": (
+                    "Optional OMV RPC service name (e.g. 'Compose', 'Zfs', 'Mergerfs', 'SnapRaid', 'Kvm', "
+                    "'Wireguard', 'BorgBackup', 'Nut', 'Smart'). Leave empty or set to 'discover' to list all "
+                    "registered RPC services and their allowed read-only methods."
+                ),
+            },
+            "rpc_method": {
+                "type": "string",
+                "description": (
+                    "Optional read-only method name on `rpc_service` (e.g. 'getContainerList', 'getSettings', "
+                    "'getList'). Mutating/exec methods are strictly blocked by the server."
+                ),
+            },
+            "rpc_params": {
+                "type": "string",
+                "description": (
+                    "Optional JSON object string of parameters for `rpc_method` "
+                    "(e.g. '{\"start\":0,\"limit\":50}'). Automatically defaults to full pagination "
+                    "for *List methods when omitted."
+                ),
+            },
+        },
+    },
+    {
         "name": "omv_get_redacted_config_xml",
         "section": "config_xml",
         "description": (
@@ -270,9 +315,12 @@ def query_omv_ro_api(section: str, extra_params: Optional[Dict[str, Any]] = None
         "token": token,
     }
     if extra_params:
-        for k in ("devicefile", "logfile", "limit"):
+        for k in ("devicefile", "logfile", "limit", "rpc_service", "rpc_method", "rpc_params"):
             if k in extra_params and extra_params[k] is not None:
-                rpc_params[k] = extra_params[k]
+                if k == "rpc_params" and isinstance(extra_params[k], dict):
+                    rpc_params[k] = json.dumps(extra_params[k])
+                else:
+                    rpc_params[k] = extra_params[k]
 
     payload = json.dumps(
         {

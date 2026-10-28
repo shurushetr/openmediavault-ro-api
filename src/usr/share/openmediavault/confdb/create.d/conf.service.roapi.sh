@@ -23,6 +23,8 @@ if ! omv_config_exists "/config/services/roapi"; then
 	omv_config_add_key "/config/services/roapi" "allow_ups" "1"
 	omv_config_add_key "/config/services/roapi" "allow_network" "1"
 	omv_config_add_key "/config/services/roapi" "allow_apt" "1"
+	omv_config_add_key "/config/services/roapi" "allow_omv_extras" "1"
+	omv_config_add_key "/config/services/roapi" "allow_rpc_inspect" "1"
 	omv_config_add_key "/config/services/roapi" "allow_configxml" "1"
 	omv_config_add_key "/config/services/roapi" "allow_logs" "1"
 	omv_config_add_key "/config/services/roapi" "allow_diagnostics" "1"
@@ -39,12 +41,11 @@ if ! omv_config_exists "/config/services/roapi"; then
 	omv_config_add_key "/config/services/roapi" "infisicalverifyssl" "1"
 	omv_config_add_key "/config/services/roapi" "infisicalfallback" "1"
 else
-	if ! omv_config_exists "/config/services/roapi/allow_logs"; then
-		omv_config_add_key "/config/services/roapi" "allow_logs" "1"
-	fi
-	if ! omv_config_exists "/config/services/roapi/allow_diagnostics"; then
-		omv_config_add_key "/config/services/roapi" "allow_diagnostics" "1"
-	fi
+	for key in allow_omv_extras allow_rpc_inspect allow_logs allow_diagnostics; do
+		if ! omv_config_exists "/config/services/roapi/${key}"; then
+			omv_config_add_key "/config/services/roapi" "${key}" "1"
+		fi
+	done
 fi
 
 exit 0

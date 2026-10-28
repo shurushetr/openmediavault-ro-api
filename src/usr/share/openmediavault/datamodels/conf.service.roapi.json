@@ -66,6 +66,14 @@
 			"type": "boolean",
 			"default": true
 		},
+		"allow_omv_extras": {
+			"type": "boolean",
+			"default": true
+		},
+		"allow_rpc_inspect": {
+			"type": "boolean",
+			"default": true
+		},
 		"allow_configxml": {
 			"type": "boolean",
 			"default": true
