@@ -417,7 +417,7 @@ class OMVRpcServiceRoApi extends \OMV\Rpc\ServiceAbstract
         return [
             "system_info" => $this->safeRpc("System", "getInformation", null, $ctx),
             "time_settings" => $this->safeRpc("System", "getTimeSettings", null, $ctx),
-            "config_dirty" => $this->safeRpc("Config", "isDirty", null, $ctx),
+            "config_dirty" => $this->safeRpc("Config", "isDirty", ["modules" => []], $ctx),
             "services_status" => $this->safeRpc("Services", "getStatus", null, $ctx),
             "webgui_settings" => $this->safeRpc("WebGui", "getSettings", null, $ctx),
             "ssh_settings" => $this->safeRpc("SSH", "get", null, $ctx),
@@ -440,7 +440,12 @@ class OMVRpcServiceRoApi extends \OMV\Rpc\ServiceAbstract
         } elseif (is_array($disks) && !isset($disks['_error'])) {
             foreach ($disks as $disk) {
                 $dev = $disk['devicefile'] ?? '';
-                if ($dev !== '' && strpos($dev, '/dev/loop') !== 0 && strpos($dev, '/dev/ram') !== 0) {
+                if (
+                    $dev !== '' &&
+                    strpos($dev, '/dev/loop') !== 0 &&
+                    strpos($dev, '/dev/ram') !== 0 &&
+                    strpos($dev, '/dev/mmcblk') !== 0
+                ) {
                     $details[$dev] = [
                         "info" => $this->safeRpc("Smart", "getInformation", ["devicefile" => $dev], $ctx),
                         "attributes" => $this->safeRpc("Smart", "getAttributes", ["devicefile" => $dev], $ctx),
@@ -525,11 +530,15 @@ class OMVRpcServiceRoApi extends \OMV\Rpc\ServiceAbstract
             "nut_files" => $nutFiles,
             "omv_default_nut_env" => $omvDefaultNut,
             "power_mgmt" => $this->safeRpc("PowerMgmt", "get", null, $ctx),
-            "power_schedules" => $this->safeRpc("PowerMgmt", "getScheduleList", ["start" => 0, "limit" => -1], $ctx),
+            "power_schedules" => $this->safeRpc("PowerMgmt", "getScheduleList", [
+                "start" => 0,
+                "limit" => -1,
+                "type" => ["reboot", "shutdown", "standby"]
+            ], $ctx),
             "cron_jobs" => $this->safeRpc("Cron", "getList", [
                 "start" => 0,
                 "limit" => -1,
-                "type" => ["userdefined", "reboot", "powermanagement"]
+                "type" => ["userdefined", "reboot", "shutdown", "standby"]
             ], $ctx),
         ];
     }
@@ -1045,7 +1054,7 @@ class OMVRpcServiceRoApi extends \OMV\Rpc\ServiceAbstract
 
         $probes = [
             ["service" => "System", "method" => "getInformation", "params" => null],
-            ["service" => "Config", "method" => "isDirty", "params" => null],
+            ["service" => "Config", "method" => "isDirty", "params" => ["modules" => []]],
             ["service" => "Services", "method" => "getStatus", "params" => null],
             ["service" => "DiskMgmt", "method" => "enumerateDevices", "params" => null],
             ["service" => "Smart", "method" => "getSettings", "params" => null],
@@ -1100,14 +1109,14 @@ class OMVRpcServiceRoApi extends \OMV\Rpc\ServiceAbstract
                 "project_id_configured" => trim((string)($cfg['infisicalprojectid'] ?? '')) !== "",
                 "project_id" => (string)($cfg['infisicalprojectid'] ?? ''),
                 "environment" => (string)($cfg['infisicalenv'] ?? 'prod'),
-                "secret_path" => (string)($cfg['infisicalpath'] ?? '/omv'),
-                "secret_key" => (string)($cfg['infisicalsecretkey'] ?? 'OMV_RO_API_TOKEN'),
+                "configured_folder_path" => (string)($cfg['infisicalpath'] ?? '/omv'),
+                "configured_variable_name" => (string)($cfg['infisicalsecretkey'] ?? 'OMV_RO_API_TOKEN'),
                 "client_credentials_configured" => (
                     trim((string)($cfg['infisicalclientid'] ?? '')) !== "" &&
                     trim((string)($cfg['infisicalclientsecret'] ?? '')) !== ""
                 ),
                 "verify_ssl" => !array_key_exists('infisicalverifyssl', $cfg) || !empty($cfg['infisicalverifyssl']),
-                "fallback_to_static_token" => !empty($cfg['infisicalfallback']),
+                "static_fallback_enabled" => !empty($cfg['infisicalfallback']),
                 "cache" => $cacheInfo,
                 "last_sync_result" => $lastInfisicalStatus,
             ],

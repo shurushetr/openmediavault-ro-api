@@ -13,8 +13,8 @@ Description: openmediavault Read-Only API plugin
  redaction, IP/CIDR allowlisting, native System Logs integration,
  and optional Infisical Universal Auth token synchronization.
 Filename: pool/main/o/openmediavault-ro-api/openmediavault-ro-api_1.0.1-1_all.deb
-Size: 21436
-MD5sum: 2e5b0a2e97772a2b4a68f626b796b427
-SHA1: 11ffac1c69f1e363ef36e5413d3924521fcb402e
-SHA256: b0d1ac3a8662ccad847fecd4c56a9effd1b7884aa7371b9f1a441507213e1b57
+Size: 21496
+MD5sum: 6437f7823e72688b743120b998e30ad6
+SHA1: c41b1d39a71b2ca65fe58e0565a7540b21573b77
+SHA256: af6cbd8f5fa3d3b074ca9b4773131768a95d8c19d002d67337385a868349da70
 
