@@ -568,7 +568,8 @@ def handle_request(req: Dict[str, Any]) -> None:
 def main() -> None:
     if len(sys.argv) > 1 and sys.argv[1] in ("--test", "-t"):
         section = sys.argv[2] if len(sys.argv) > 2 else "overview"
-        res = query_omv_ro_api(section)
+        extra = json.loads(sys.argv[3]) if len(sys.argv) > 3 else None
+        res = query_omv_ro_api(section, extra)
         print(json.dumps(res, indent=2, sort_keys=True))
         sys.exit(1 if ("error" in res and "_agent_feedback" not in res) else 0)
 

@@ -10,7 +10,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OUT_DIR="${1:-${SCRIPT_DIR}/dist}"
 PKG_NAME="openmediavault-ro-api"
-PKG_VER="1.0.1-1"
+PKG_VER="1.0.2-1"
 DEB_FILE="${OUT_DIR}/${PKG_NAME}_${PKG_VER}_all.deb"
 
 STAGE_DIR="$(mktemp -d "/tmp/${PKG_NAME}-build.XXXXXX")"

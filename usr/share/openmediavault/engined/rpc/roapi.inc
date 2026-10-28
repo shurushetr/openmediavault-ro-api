@@ -13,7 +13,7 @@
  */
 class OMVRpcServiceRoApi extends \OMV\Rpc\ServiceAbstract
 {
-    private const PLUGIN_VERSION = "1.0.1-1";
+    private const PLUGIN_VERSION = "1.0.2-1";
     private const CACHE_FILE = "/run/openmediavault-ro-api.cache";
     private const STATUS_FILE = "/run/openmediavault-ro-api.status.json";
     private const LOG_FILE = "/var/log/openmediavault-ro-api.log";
@@ -440,11 +440,16 @@ class OMVRpcServiceRoApi extends \OMV\Rpc\ServiceAbstract
         } elseif (is_array($disks) && !isset($disks['_error'])) {
             foreach ($disks as $disk) {
                 $dev = $disk['devicefile'] ?? '';
+                $canonical = $disk['canonicaldevicefile'] ?? '';
+                $devName = $disk['devicename'] ?? '';
                 if (
                     $dev !== '' &&
                     strpos($dev, '/dev/loop') !== 0 &&
                     strpos($dev, '/dev/ram') !== 0 &&
-                    strpos($dev, '/dev/mmcblk') !== 0
+                    strpos($dev, '/dev/mmcblk') !== 0 &&
+                    strpos($dev, '/dev/disk/by-id/mmc-') !== 0 &&
+                    strpos($canonical, '/dev/mmcblk') !== 0 &&
+                    strpos($devName, 'mmcblk') !== 0
                 ) {
                     $details[$dev] = [
                         "info" => $this->safeRpc("Smart", "getInformation", ["devicefile" => $dev], $ctx),
@@ -644,8 +649,17 @@ class OMVRpcServiceRoApi extends \OMV\Rpc\ServiceAbstract
             "Md" => [
                 ["method" => "getList", "params" => ["start" => 0, "limit" => -1]],
             ],
+            "MdMgmt" => [
+                ["method" => "enumerateDevices", "params" => null],
+            ],
             "RaidMgmt" => [
                 ["method" => "getList", "params" => ["start" => 0, "limit" => -1]],
+            ],
+            "MinIO" => [
+                ["method" => "get", "params" => null],
+            ],
+            "AptMgmt" => [
+                ["method" => "getSourceList", "params" => ["start" => 0, "limit" => 50]],
             ],
             "Tgt" => [
                 ["method" => "getSettings", "params" => null],
@@ -654,6 +668,7 @@ class OMVRpcServiceRoApi extends \OMV\Rpc\ServiceAbstract
             ],
             "CpuTemp" => [
                 ["method" => "get", "params" => null],
+                ["method" => "getSensors", "params" => null],
             ],
             "Autoshutdown" => [
                 ["method" => "getSettings", "params" => null],
@@ -896,7 +911,7 @@ class OMVRpcServiceRoApi extends \OMV\Rpc\ServiceAbstract
         if (in_array(strtolower($serviceName), $blockedServices, true)) {
             return false;
         }
-        if (!preg_match('/^(get|enumerate|list|is|has|stat|status)([A-Z_][A-Za-z0-9_]*)?$/', $methodName)) {
+        if (!preg_match('/^(get|enumerate|list|is|has|stat|status)([A-Za-z0-9_]*)?$/', $methodName)) {
             return false;
         }
         $forbiddenSubstrings = [

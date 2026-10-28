@@ -1,3 +1,15 @@
+openmediavault-ro-api (1.0.2-1) stable; urgency=low
+
+  * Fix OMV 7 RPC parameter schemas for Config::isDirty, PowerMgmt::getScheduleList,
+    and Cron::getList to eliminate sub-RPC partial errors.
+  * Skip S.M.A.R.T. queries on eMMC devices (/dev/disk/by-id/mmc-* and /dev/mmcblk*).
+  * Add MinIO (S3), MdMgmt (MD RAID), AptMgmt, and CpuTemp::getSensors to omv_extras
+    auto-discovery catalog.
+  * Allow alphanumeric suffixes in read-only RPC method filter (e.g. CpuTemp::get2,
+    Config::getlist).
+
+ -- shurushetr <shurushetr@gmail.com>  Wed, 28 Oct 2026 17:02:00 -0400
+
 openmediavault-ro-api (1.0.1-1) stable; urgency=low
 
   * Fix adjacent string literal concatenation in OMVRpcServiceRoApi

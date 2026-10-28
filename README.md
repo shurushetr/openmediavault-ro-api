@@ -356,7 +356,7 @@ Then reference `OMV_RO_API_TOKEN_FILE` in your MCP config (works on both Linux a
 | **`omv_get_ups_and_power`** | `ups` | NUT / UPS configuration, live `upsc` battery/load/runtime telemetry, redacted `/etc/nut/*.conf` files, standby/power schedules, and cron jobs. |
 | **`omv_get_network_and_services`** | `network` | Network interfaces, DNS/gateway, proxy settings, TLS & SSH certificate metadata, and service status. |
 | **`omv_get_apt_and_plugins`** | `apt` | Installed `openmediavault-*` plugins, APT repository settings, and pending package upgrades. |
-| **`omv_get_omv_extras`** | `omv_extras` | Auto-detects and audits installed **`omv-extras`** & community plugins: **Compose/Docker** (containers, stats, compose files, volumes, networks, images), **MergerFS**, **SnapRAID**, **ZFS**, **KVM/Libvirt**, **WireGuard**, **BorgBackup**, **RemoteMount**, **LUKS**, **MD RAID**, **iSCSI/TGT**, **CpuTemp**, **Autoshutdown**, **Flashmemory**, **Rsnapshot**, **UsbBackup**, **Symlinks**, **ResetPerms**, **Scripts**, **ClamAV**, **Bcache**, **Podman**, **FTP/SFTP**, and **MiniDLNA**. |
+| **`omv_get_omv_extras`** | `omv_extras` | Auto-detects and audits installed **`omv-extras`** & community/official plugins: **Compose/Docker** (containers, stats, compose files, volumes, networks, images), **MergerFS**, **SnapRAID**, **ZFS**, **KVM/Libvirt**, **WireGuard**, **BorgBackup**, **RemoteMount**, **LUKS**, **MD RAID (`MdMgmt`)**, **MinIO (`openmediavault-s3`)**, **APT Sources (`AptMgmt`)**, **iSCSI/TGT**, **CpuTemp** (including full sensor dump), **Autoshutdown**, **Flashmemory**, **Rsnapshot**, **UsbBackup**, **Symlinks**, **ResetPerms**, **Scripts**, **ClamAV**, **Bcache**, **Podman**, **FTP/SFTP**, and **MiniDLNA**. |
 | **`omv_inspect_rpc`** | `rpc_inspect` | **Dynamic Read-Only Plugin Inspector:** Call with empty arguments to discover *all* registered RPC services in `omv-engined` and their read-only methods, or pass `rpc_service` + `rpc_method` to query any newly installed plugin while the server blocks all mutating/exec methods. |
 | **`omv_get_redacted_config_xml`** | `config_xml` | Complete `/etc/openmediavault/config.xml` tree parsed as JSON with server-side recursive secret redaction. |
 | **`omv_get_logs`** | `logs` | Reads up to 500 redacted log lines from `roapi` (plugin audit log), `syslog`, `daemon`, `messages`, `auth`, `smartd`, `smb`, `rsync`, `nut`, `engined`, `nginx`, or `nfs`. |
@@ -371,7 +371,7 @@ Every API call includes an `_agent_feedback` block so AI agents immediately see 
 
 ```json
 "_agent_feedback": {
-  "plugin_version": "1.0.0-1",
+  "plugin_version": "1.0.2-1",
   "section": "omv_extras",
   "client_ip": "192.168.1.100",
   "timestamp": "2026-10-28T08:00:00-04:00",
