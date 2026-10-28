@@ -43,7 +43,7 @@ By default, OpenMediaVault's API (`/rpc.php`) requires an administrator login se
 ![Uploading and Installing openmediavault-ro-api in System -> Plugins](docs/images/02-omv-plugin-upload-install.png)
 -->
 
-*(Prefer the command line? Run `sudo apt-get install -f ./openmediavault-ro-api_1.0.0-1_all.deb` over SSH.)*
+*(Prefer the command line on your NAS? Run `sudo apt-get install -f ./openmediavault-ro-api_1.0.0-1_all.deb` over SSH.)*
 
 ---
 
@@ -62,32 +62,46 @@ By default, OpenMediaVault's API (`/rpc.php`) requires an administrator login se
 
 ---
 
-### Step 3: Connect Your AI Assistant (MCP Setup Guide)
+### Step 3: Download the Companion MCP Script (Linux & Windows)
 
-Download [**`mcp/omv-ro-mcp.py`**](mcp/omv-ro-mcp.py) to your computer (requires only **Python 3.8+** standard library—no `pip install` needed!):
+The companion MCP server ([**`mcp/omv-ro-mcp.py`**](mcp/omv-ro-mcp.py)) runs on your workstation (Linux, Windows, or macOS) and requires only **Python 3.8+** standard library—**zero `pip install` dependencies**.
 
+#### Linux (Bash / Zsh)
 ```bash
 mkdir -p ~/.local/bin
 curl -fsSL https://raw.githubusercontent.com/shurushetr/openmediavault-ro-api/main/mcp/omv-ro-mcp.py -o ~/.local/bin/omv-ro-mcp.py
 chmod +x ~/.local/bin/omv-ro-mcp.py
 ```
 
-Choose your AI client below and replace `http://192.168.1.50` with your OMV IP/URL and `YOUR_64_CHAR_TOKEN` with the token from Step 2:
+#### Windows (PowerShell)
+```powershell
+New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.local\bin" | Out-Null
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/shurushetr/openmediavault-ro-api/main/mcp/omv-ro-mcp.py" -OutFile "$env:USERPROFILE\.local\bin\omv-ro-mcp.py"
+```
+
+---
+
+### Step 4: Configure Your AI Assistant (Linux & Windows Guides)
+
+Choose your AI client below and replace:
+- `http://192.168.1.50` with your OpenMediaVault IP or URL
+- `YOUR_64_CHAR_TOKEN` with the Read-Only API token from Step 2
+- `yourname` with your Linux or Windows username
 
 <details open>
-<summary><b>1. Claude Desktop (macOS / Windows / Linux)</b></summary>
+<summary><b>1. Claude Desktop (Linux & Windows)</b></summary>
 
-Edit your Claude Desktop config file:
-- **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
-- **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+**Config File Location:**
 - **Linux:** `~/.config/Claude/claude_desktop_config.json`
+- **Windows:** `%APPDATA%\Claude\claude_desktop_config.json` (press `Win + R`, paste `%APPDATA%\Claude`, and press Enter)
 
+**Linux Configuration:**
 ```json
 {
   "mcpServers": {
     "omv-ro": {
       "command": "python3",
-      "args": ["/Users/yourname/.local/bin/omv-ro-mcp.py"],
+      "args": ["/home/yourname/.local/bin/omv-ro-mcp.py"],
       "env": {
         "OMV_HOST": "http://192.168.1.50",
         "OMV_RO_API_TOKEN": "YOUR_64_CHAR_TOKEN"
@@ -96,28 +110,54 @@ Edit your Claude Desktop config file:
   }
 }
 ```
-Restart Claude Desktop. You will see the 12 `omv_*` tools under the hammer/tools icon.
+
+**Windows Configuration:**
+```json
+{
+  "mcpServers": {
+    "omv-ro": {
+      "command": "python",
+      "args": ["C:\\Users\\yourname\\.local\\bin\\omv-ro-mcp.py"],
+      "env": {
+        "OMV_HOST": "http://192.168.1.50",
+        "OMV_RO_API_TOKEN": "YOUR_64_CHAR_TOKEN"
+      }
+    }
+  }
+}
+```
+Restart Claude Desktop. You will see the 12 `omv_*` tools under the tools icon.
 </details>
 
 <details>
-<summary><b>2. Claude Code CLI</b></summary>
+<summary><b>2. Claude Code CLI (Linux & Windows)</b></summary>
 
-Run the following command in your terminal:
-
+**Linux (Bash):**
 ```bash
 claude mcp add omv-ro \
   -e OMV_HOST="http://192.168.1.50" \
   -e OMV_RO_API_TOKEN="YOUR_64_CHAR_TOKEN" \
-  -- python3 ~/.local/bin/omv-ro-mcp.py
+  -- python3 "$HOME/.local/bin/omv-ro-mcp.py"
+```
+
+**Windows (PowerShell):**
+```powershell
+claude mcp add omv-ro `
+  -e OMV_HOST="http://192.168.1.50" `
+  -e OMV_RO_API_TOKEN="YOUR_64_CHAR_TOKEN" `
+  -- python "$env:USERPROFILE\.local\bin\omv-ro-mcp.py"
 ```
 Verify with `claude mcp list`.
 </details>
 
 <details>
-<summary><b>3. Cursor IDE</b></summary>
+<summary><b>3. Cursor IDE (Linux & Windows)</b></summary>
 
-Open **Cursor Settings** -> **MCP** -> **Add new global MCP server** (or edit `~/.cursor/mcp.json`):
+Open **Cursor Settings** -> **MCP** -> **Add new global MCP server**, or edit:
+- **Linux:** `~/.cursor/mcp.json`
+- **Windows:** `%USERPROFILE%\.cursor\mcp.json`
 
+**Linux Configuration:**
 ```json
 {
   "mcpServers": {
@@ -132,13 +172,32 @@ Open **Cursor Settings** -> **MCP** -> **Add new global MCP server** (or edit `~
   }
 }
 ```
+
+**Windows Configuration:**
+```json
+{
+  "mcpServers": {
+    "omv-ro": {
+      "command": "python",
+      "args": ["C:\\Users\\yourname\\.local\\bin\\omv-ro-mcp.py"],
+      "env": {
+        "OMV_HOST": "http://192.168.1.50",
+        "OMV_RO_API_TOKEN": "YOUR_64_CHAR_TOKEN"
+      }
+    }
+  }
+}
+```
 </details>
 
 <details>
-<summary><b>4. Google Antigravity (AGY) & Gemini CLI</b></summary>
+<summary><b>4. Google Antigravity (AGY) & Gemini CLI (Linux & Windows)</b></summary>
 
-Add `omv-ro` to `~/.gemini/config/mcp_config.json` (Antigravity) or `~/.gemini/settings.json` (Gemini CLI):
+**Config File Location:**
+- **Linux:** `~/.gemini/config/mcp_config.json` (Antigravity) or `~/.gemini/settings.json` (Gemini CLI)
+- **Windows:** `%USERPROFILE%\.gemini\config\mcp_config.json` (Antigravity) or `%USERPROFILE%\.gemini\settings.json` (Gemini CLI)
 
+**Linux Configuration:**
 ```json
 {
   "mcpServers": {
@@ -153,13 +212,30 @@ Add `omv-ro` to `~/.gemini/config/mcp_config.json` (Antigravity) or `~/.gemini/s
   }
 }
 ```
+
+**Windows Configuration:**
+```json
+{
+  "mcpServers": {
+    "omv-ro": {
+      "command": "python",
+      "args": ["C:\\Users\\yourname\\.local\\bin\\omv-ro-mcp.py"],
+      "env": {
+        "OMV_HOST": "http://192.168.1.50",
+        "OMV_RO_API_TOKEN": "YOUR_64_CHAR_TOKEN"
+      }
+    }
+  }
+}
+```
 </details>
 
 <details>
-<summary><b>5. VS Code (GitHub Copilot Agent Mode / Cline / Roo Code)</b></summary>
+<summary><b>5. VS Code — GitHub Copilot Agent Mode / Cline / Roo Code (Linux & Windows)</b></summary>
 
 For **VS Code Copilot Agent Mode**, add to `.vscode/mcp.json` (or your User `settings.json` under `"mcp": { "servers": { ... } }`):
 
+**Linux Configuration:**
 ```json
 {
   "servers": {
@@ -176,20 +252,14 @@ For **VS Code Copilot Agent Mode**, add to `.vscode/mcp.json` (or your User `set
 }
 ```
 
-For **Cline / Roo Code**, open **MCP Servers** -> **Configure MCP Servers** (`cline_mcp_settings.json`) and use the same `mcpServers` block as Claude Desktop.
-</details>
-
-<details>
-<summary><b>6. Windsurf IDE</b></summary>
-
-Edit `~/.codeium/windsurf/mcp_config.json`:
-
+**Windows Configuration:**
 ```json
 {
-  "mcpServers": {
+  "servers": {
     "omv-ro": {
-      "command": "python3",
-      "args": ["/home/yourname/.local/bin/omv-ro-mcp.py"],
+      "type": "stdio",
+      "command": "python",
+      "args": ["C:\\Users\\yourname\\.local\\bin\\omv-ro-mcp.py"],
       "env": {
         "OMV_HOST": "http://192.168.1.50",
         "OMV_RO_API_TOKEN": "YOUR_64_CHAR_TOKEN"
@@ -198,20 +268,40 @@ Edit `~/.codeium/windsurf/mcp_config.json`:
   }
 }
 ```
+
+For **Cline / Roo Code**, open **MCP Servers** -> **Configure MCP Servers** (`cline_mcp_settings.json`) and use the same `mcpServers` block as Claude Desktop above.
 </details>
 
 <details>
-<summary><b>Security Tip: Keep Your Token Out of <code>mcp_config.json</code> (Using a Local Token File)</b></summary>
+<summary><b>6. Windsurf IDE (Linux & Windows)</b></summary>
 
-If you don't want your token stored in plaintext inside your IDE's MCP config file, save it in a `0600` file and use `OMV_RO_API_TOKEN_FILE`:
+**Config File Location:**
+- **Linux:** `~/.codeium/windsurf/mcp_config.json`
+- **Windows:** `%USERPROFILE%\.codeium\windsurf\mcp_config.json`
 
+Use the same `mcpServers` JSON block shown in the Claude Desktop / Cursor section above (`"command": "python3"` on Linux, `"command": "python"` on Windows).
+</details>
+
+<details>
+<summary><b>Security Tip: Keep Your Token Out of <code>mcp_config.json</code> (Local Token File on Linux & Windows)</b></summary>
+
+If you don't want your token stored in plaintext inside your IDE's MCP config file, store it in a user-restricted token file and pass `OMV_RO_API_TOKEN_FILE`:
+
+**Linux:**
 ```bash
 mkdir -p ~/.config/omv-ro
 printf "%s" "YOUR_64_CHAR_TOKEN" > ~/.config/omv-ro/token
 chmod 600 ~/.config/omv-ro/token
 ```
 
-Then reference `OMV_RO_API_TOKEN_FILE` in your MCP config:
+**Windows (PowerShell):**
+```powershell
+New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.config\omv-ro" | Out-Null
+Set-Content -NoNewline -Path "$env:USERPROFILE\.config\omv-ro\token" -Value "YOUR_64_CHAR_TOKEN"
+icacls "$env:USERPROFILE\.config\omv-ro\token" /inheritance:r /grant:r "$($env:USERNAME):R"
+```
+
+Then reference `OMV_RO_API_TOKEN_FILE` in your MCP config (works on both Linux and Windows):
 
 ```json
 "env": {
@@ -311,10 +401,11 @@ On the MCP client side, if you use the Infisical CLI, you can omit `OMV_RO_API_T
 
 ---
 
-## Direct `curl` API Usage (Without MCP)
+## Direct HTTP API Usage (Without MCP)
 
 You can also query the Read-Only API directly from any script, monitoring tool, or dashboard via HTTP `POST` to `/rpc.php`:
 
+#### Linux (`curl`)
 ```bash
 curl -sS -X POST "http://192.168.1.50/rpc.php" \
   -H "Content-Type: application/json" \
@@ -329,26 +420,26 @@ curl -sS -X POST "http://192.168.1.50/rpc.php" \
   }' | jq .
 ```
 
-To discover all registered RPC services and their read-only methods via `curl`:
+#### Windows (`PowerShell`)
+```powershell
+$body = @{
+  service = "RoApiProxy"
+  method  = "query"
+  params  = @{
+    section = "overview"
+    token   = "YOUR_64_CHAR_TOKEN"
+  }
+  options = $null
+} | ConvertTo-Json -Depth 4
 
-```bash
-curl -sS -X POST "http://192.168.1.50/rpc.php" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "service": "RoApiProxy",
-    "method": "query",
-    "params": {
-      "section": "rpc_inspect",
-      "rpc_service": "discover",
-      "token": "YOUR_64_CHAR_TOKEN"
-    },
-    "options": null
-  }' | jq .
+Invoke-RestMethod -Method Post -Uri "http://192.168.1.50/rpc.php" -ContentType "application/json" -Body $body | ConvertTo-Json -Depth 6
 ```
 
 ---
 
 ## Building from Source
+
+On Debian / Ubuntu (or WSL2 on Windows):
 
 ```bash
 ./build-deb.sh

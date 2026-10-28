@@ -220,7 +220,7 @@ def fetch_creds_via_infisical() -> Dict[str, Any]:
     token_file = os.environ.get("OMV_RO_API_TOKEN_FILE", "").strip()
 
     if not token and token_file:
-        expanded = os.path.expanduser(token_file)
+        expanded = os.path.expandvars(os.path.expanduser(token_file))
         if os.path.isfile(expanded):
             try:
                 with open(expanded, "r", encoding="utf-8") as fh:
@@ -542,6 +542,10 @@ def handle_request(req: Dict[str, Any]) -> None:
 
 
 def main() -> None:
+    if hasattr(sys.stdin, "reconfigure"):
+        sys.stdin.reconfigure(encoding="utf-8")
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", newline="\n")
     for line in sys.stdin:
         line = line.strip()
         if not line:
