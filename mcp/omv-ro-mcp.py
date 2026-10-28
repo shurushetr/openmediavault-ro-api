@@ -215,6 +215,18 @@ def fetch_creds_via_infisical() -> Dict[str, Any]:
       2. Token file (OMV_HOST + OMV_RO_API_TOKEN_FILE, e.g. ~/.config/omv-ro/token)
       3. Optional Infisical CLI runtime injection (if INFISICAL_PROJECT_ID is set)
     """
+    env_file = os.path.expanduser("~/.config/environment.d/90-infisical.conf")
+    if os.path.isfile(env_file):
+        try:
+            with open(env_file, "r", encoding="utf-8") as fh:
+                for line in fh:
+                    line = line.strip()
+                    if line and not line.startswith("#") and "=" in line:
+                        k, v = line.split("=", 1)
+                        os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
+        except Exception:
+            pass
+
     host = os.environ.get("OMV_HOST", "").strip()
     token = os.environ.get("OMV_RO_API_TOKEN", "").strip()
     token_file = os.environ.get("OMV_RO_API_TOKEN_FILE", "").strip()
