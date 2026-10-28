@@ -404,7 +404,8 @@ def classify_omv_error(code: Any, message: str, section: str) -> Dict[str, Any]:
             "http_or_rpc_code": code,
             "remediation": (
                 "The `openmediavault-ro-api` plugin is not installed on this OpenMediaVault host yet. "
-                "Upload and install `openmediavault-ro-api_1.0.0-1_all.deb` via `System -> Plugins -> Upload`."
+                "Install `openmediavault-ro-api_1.0.0-1_all.deb` via SSH (`apt-get install -y ./openmediavault-ro-api_1.0.0-1_all.deb`) "
+                "or via the OMV Web UI (`System -> Scheduled Tasks -> Create -> Run` as root)."
             ),
         }
     if code == 401 or "invalid read-only api token" in msg_lower:

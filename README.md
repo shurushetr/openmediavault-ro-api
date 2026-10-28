@@ -28,22 +28,33 @@ By default, OpenMediaVault's API (`/rpc.php`) requires an administrator login se
 
 ---
 
-## Quick Start (3 Minutes — No SSH Required)
+## Quick Start (3 Minutes)
 
 ### Step 1: Install the Plugin in OpenMediaVault
 
-1. Download **`openmediavault-ro-api_1.0.0-1_all.deb`** from the [**Releases**](https://github.com/shurushetr/openmediavault-ro-api/releases) page.
-2. Open your OpenMediaVault Web UI and go to **`System` -> `Plugins`**.
-3. Click the **`Upload`** button on the top toolbar and select `openmediavault-ro-api_1.0.0-1_all.deb`.
-4. Find **`openmediavault-ro-api`** in the plugin list, select it, and click **`Install`**.
-5. Click the yellow banner at the top of the screen to **Apply pending configuration changes**.
+> [!NOTE]
+> OpenMediaVault 6 / 7 / 8 removed the legacy `.deb` upload button from `System -> Plugins`. Choose either **Option A (100% Web UI — No SSH)** or **Option B (SSH One-Liner)** below.
+
+#### Option A: 100% OMV Web UI (No SSH Required)
+1. In the OpenMediaVault Web UI, go to **`System` -> `Scheduled Tasks`** and click **`Create`** (`+`).
+2. Leave **Enabled** unchecked (you only need to run it once), set **User** to `root`, and paste the following into **Command**:
+   ```bash
+   curl -fsSL https://github.com/shurushetr/openmediavault-ro-api/releases/latest/download/openmediavault-ro-api_1.0.0-1_all.deb -o /tmp/openmediavault-ro-api.deb && apt-get install -y /tmp/openmediavault-ro-api.deb
+   ```
+3. Click **`Save`** (you do not need to apply the yellow configuration banner just to run the task manually).
+4. Select the newly created task in the table and click **`Run`** (the play `▶` icon on the top toolbar), then click **`Start`**.
+5. Once the output window finishes with `Setting up openmediavault-ro-api (1.0.0-1) ...`, close the window, delete the temporary scheduled task, and hard-refresh your browser (`Ctrl + Shift + R`).
 
 <!-- SCREENSHOT 2 PLACEHOLDER -->
 <!--
-![Uploading and Installing openmediavault-ro-api in System -> Plugins](docs/images/02-omv-plugin-upload-install.png)
+![Installing openmediavault-ro-api via System -> Scheduled Tasks -> Run](docs/images/02-omv-plugin-install.png)
 -->
 
-*(Prefer the command line on your NAS? Run `sudo apt-get install -f ./openmediavault-ro-api_1.0.0-1_all.deb` over SSH.)*
+#### Option B: SSH / Terminal One-Liner
+Run the following on your OpenMediaVault server via SSH:
+```bash
+curl -fsSL https://github.com/shurushetr/openmediavault-ro-api/releases/latest/download/openmediavault-ro-api_1.0.0-1_all.deb -o /tmp/openmediavault-ro-api.deb && sudo apt-get install -y /tmp/openmediavault-ro-api.deb
+```
 
 ---
 

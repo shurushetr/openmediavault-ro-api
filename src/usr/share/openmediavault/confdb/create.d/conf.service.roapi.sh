@@ -4,10 +4,12 @@ set -e
 . /usr/share/openmediavault/scripts/helper-functions
 
 if ! omv_config_exists "/config/services/roapi"; then
-	default_token="__INITIAL_RO_TOKEN__"
-	if [ -z "${default_token}" ] || [ "${default_token}" = "__INITIAL_RO_TOKEN__" ]; then
-		default_token=$(head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n')
-	fi
+	default_token="${OMV_RO_API_INITIAL_TOKEN:-__INITIAL_RO_TOKEN__}"
+	case "${default_token}" in
+		""|__INITIAL_*)
+			default_token=$(head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n')
+			;;
+	esac
 	omv_config_add_node "/config/services" "roapi"
 	omv_config_add_key "/config/services/roapi" "enable" "1"
 	omv_config_add_key "/config/services/roapi" "apitoken" "${default_token}"
