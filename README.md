@@ -67,7 +67,9 @@ Granularly enable or disable individual query sections from the UI:
 | **Allow `network` section** | `allow_network` | `true` | `Network::enumerateConfiguredDevices`, `Services::getStatus`, `/config/system/network`, `/config/services/ssh` |
 | **Allow `apt` section** | `allow_apt` | `true` | `Plugin::enumeratePlugins`, `Apt::enumerateUpgraded` |
 | **Allow `config_xml` section** | `allow_configxml` | `true` | Full `/etc/openmediavault/config.xml` tree parsed as JSON with server-side recursive secret redaction |
-| **Additional Redacted Key Patterns** | `redactpatterns` | *(empty)* | Optional comma-separated list of custom key substrings to redact as `***REDACTED_BY_OMV_RO_API***` in addition to built-in patterns. |
+| **Allow `logs` section** | `allow_logs` | `true` | Redacted system, daemon, S.M.A.R.T., NUT/UPS, SMB, NFS, NGINX, `omv-engined`, and `Read-Only API` logs (`LogFile::getList` + `journalctl`) |
+| **Allow `diagnostics` section** | `allow_diagnostics` | `true` | Agent self-diagnostics: plugin version/config state, enabled scope matrix, Infisical sync health & cache status, sub-RPC latency probes, and recent audit events |
+| **Additional Redacted Key Patterns** | `redactpatterns` | *(empty)* | Optional comma-separated list of custom key substrings to redact as `***REDACTED***` in addition to built-in patterns. |
 
 ### 3. Infisical Universal Auth Token Sync (Optional)
 | UI Field | XML Key | Default | Description |
@@ -113,13 +115,23 @@ Valid `section` values:
 - `network`
 - `apt`
 - `config_xml`
+- `logs` (accepts optional `"logfile": "roapi|syslog|daemon|messages|auth|smartd|smb|rsync|nut|engined|nginx|nfs"` and `"limit": 100`)
+- `diagnostics` (agent self-diagnostics, scope matrix, Infisical sync health, sub-RPC latency probes, and recent audit log entries)
 - `all` (returns all sections that are currently enabled in the UI)
+
+Every response also includes an `_agent_feedback` block reporting execution duration (`duration_ms`), any partial sub-RPC errors (`partial_errors`), currently enabled/disabled scopes, and actionable troubleshooting hints.
+
+---
+
+## Native OMV Log Viewer (`Diagnostics` -> `System Logs` -> `Logs` -> `Read-Only API`)
+
+The plugin registers `/var/log/openmediavault-ro-api.log` with OpenMediaVault's `LogFileSpec` engine so administrators can view, sort, and search all Read-Only API events (authorized queries, unauthorized IP/token attempts, disabled scope rejections, sub-RPC warnings, and Infisical sync status) directly in the OMV Web UI under **`Diagnostics` -> `System Logs` -> `Logs` -> `Read-Only API`**.
 
 ---
 
 ## Companion Model Context Protocol (`MCP`) Server
 
-The repository includes a zero-dependency Python 3 MCP server ([`mcp/omv-ro-mcp.py`](mcp/omv-ro-mcp.py)) that exposes 8 read-only tools to MCP-compatible AI assistants (Claude Desktop, Cursor, Google Antigravity, Windsurf, etc.):
+The repository includes a zero-dependency Python 3 MCP server ([`mcp/omv-ro-mcp.py`](mcp/omv-ro-mcp.py)) that exposes 10 read-only tools to MCP-compatible AI assistants (Claude Desktop, Cursor, Google Antigravity, Windsurf, etc.):
 
 - `omv_get_overview`
 - `omv_get_disks_and_smart`
@@ -129,6 +141,8 @@ The repository includes a zero-dependency Python 3 MCP server ([`mcp/omv-ro-mcp.
 - `omv_get_network_and_services`
 - `omv_get_apt_and_plugins`
 - `omv_get_redacted_config_xml`
+- `omv_get_logs` *(query `roapi`, `syslog`, `daemon`, `smartd`, `nut`, `engined`, `smb`, `nfs`, `nginx` logs)*
+- `omv_get_diagnostics` *(agent self-diagnostic & feedback loop tool)*
 
 ### Option A: Standard Environment Variables (`mcp_config.json`)
 

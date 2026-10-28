@@ -51,11 +51,12 @@ jobs:
       - name: Lint PHP RPC Services
         run: |
           php -l src/usr/share/openmediavault/engined/rpc/roapi.inc
+          php -l src/usr/share/openmediavault/engined/inc/90roapi-logfile.inc
           php -l src/var/www/openmediavault/rpc/roapi.inc
 
       - name: Lint MCP Server Python Script
         run: |
-          python3 -m py_compile mcp/omv-ro-mcp.py
+          PYTHONPYCACHEPREFIX=/tmp python3 -m py_compile mcp/omv-ro-mcp.py
 
       - name: Build Debian Package (.deb)
         run: |

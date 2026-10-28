@@ -12,6 +12,14 @@ case "$1" in
 			omv-confdbadm migrate "conf.service.roapi" "${2}" || :
 		fi
 
+		LOG_FILE="/var/log/openmediavault-ro-api.log"
+		if [ ! -f "${LOG_FILE}" ]; then
+			touch "${LOG_FILE}"
+		fi
+		chmod 0640 "${LOG_FILE}" || :
+		chown root:adm "${LOG_FILE}" 2>/dev/null || :
+		printf "%s INFO [lifecycle] 127.0.0.1 openmediavault-ro-api package configured and ready\n" "$(date -Iseconds)" >> "${LOG_FILE}" || :
+
 		dpkg-trigger update-workbench || :
 		dpkg-trigger restart-engined || :
 

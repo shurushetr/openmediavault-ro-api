@@ -3,8 +3,9 @@
 OpenMediaVault Read-Only MCP Server (omv-ro-mcp)
 ================================================
 Companion Model Context Protocol (MCP) server for `openmediavault-ro-api`.
-Exposes 8 strictly read-only tools for AI coding assistants and infrastructure
-auditors without requiring OMV administrator credentials or SSH access.
+Exposes 10 strictly read-only tools (including `omv_get_diagnostics` and
+`omv_get_logs` for agentic self-diagnosis and feedback) without requiring
+OMV administrator credentials or SSH access.
 
 Configuration (Environment Variables):
   - OMV_HOST          : Base URL or IP of the OpenMediaVault server (e.g., "http://192.168.1.50")
@@ -28,7 +29,7 @@ import subprocess
 import sys
 import urllib.error
 import urllib.request
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 DEFAULT_INFISICAL_ENV = os.environ.get("INFISICAL_ENV", "prod")
 DEFAULT_INFISICAL_PATH = os.environ.get("INFISICAL_PATH", "/omv")
@@ -41,54 +42,66 @@ TOOLS = [
             "Read OpenMediaVault system overview, version, hostname, uptime, CPU/memory utilization, "
             "and pending configuration dirty-state (`isDirty`)."
         ),
+        "properties": {},
     },
     {
         "name": "omv_get_disks_and_smart",
         "section": "disks",
         "description": (
             "Read physical block devices (`DiskMgmt.enumerateDevices`) and S.M.A.R.T. health/temperature "
-            "assessments (`Smart.getList`), plus `/config/storage/hdparm` and `/config/storage/smart`."
+            "assessments (`Smart.getList`), plus per-drive S.M.A.R.T. attributes and self-test logs."
         ),
+        "properties": {
+            "devicefile": {
+                "type": "string",
+                "description": "Optional specific device path (e.g. '/dev/sda' or '/dev/nvme0n1').",
+            }
+        },
     },
     {
         "name": "omv_get_storage_and_filesystems",
         "section": "storage",
         "description": (
-            "Read all mounted and configured filesystems (`FileSystemMgmt.getList`), fstab mount points "
-            "(`/config/system/fstab`), and Linux MD RAID arrays (`RaidMgmt.getList`)."
+            "Read all mounted and configured filesystems (`FileSystemMgmt.enumerateFilesystems`), "
+            "fstab mount points (`FsTab.enumerateEntries`), `/proc/mdstat`, and ZFS pool status."
         ),
+        "properties": {},
     },
     {
         "name": "omv_get_shares_and_exports",
         "section": "shares",
         "description": (
-            "Read all OpenMediaVault shared folders (`ShareMgmt.getList`), SMB/CIFS shares, "
-            "NFS exports, and rsync module configurations (with passwords automatically redacted)."
+            "Read all OpenMediaVault shared folders (`ShareMgmt.enumerateSharedFolders`), filesystem snapshots, "
+            "SMB/CIFS shares, and NFS exports (with passwords automatically redacted)."
         ),
+        "properties": {},
     },
     {
         "name": "omv_get_ups_and_power",
         "section": "ups",
         "description": (
-            "Read OpenMediaVault NUT / UPS configuration (`/config/services/nut`), live `upsc` telemetry, "
-            "scheduled power-management jobs, and cron jobs."
+            "Read OpenMediaVault NUT / UPS configuration (`Nut.get`), live `upsc` telemetry (`Nut.getStats`), "
+            "redacted `/etc/nut/*.conf` files, scheduled power-management jobs, and cron jobs."
         ),
+        "properties": {},
     },
     {
         "name": "omv_get_network_and_services",
         "section": "network",
         "description": (
-            "Read OpenMediaVault network interfaces (`Network.enumerateConfiguredDevices`), general "
-            "network settings, firewall rules, SSH daemon settings, and high-level service status (`Services.getStatus`)."
+            "Read OpenMediaVault network interfaces (`Network.enumerateDevicesList`), general "
+            "network settings, proxy settings, TLS/SSH certificate metadata, and service status (`Services.getStatus`)."
         ),
+        "properties": {},
     },
     {
         "name": "omv_get_apt_and_plugins",
         "section": "apt",
         "description": (
-            "Read installed and available OpenMediaVault plugins (`Plugin.enumeratePlugins`) and "
-            "pending APT package upgrades (`Apt.enumerateUpgraded`)."
+            "Read installed OpenMediaVault plugins (`Plugin.enumeratePlugins`), APT repository settings, "
+            "and pending APT package upgrades (`Apt.enumerateUpgraded`)."
         ),
+        "properties": {},
     },
     {
         "name": "omv_get_redacted_config_xml",
@@ -97,13 +110,59 @@ TOOLS = [
             "Read the complete OpenMediaVault `/etc/openmediavault/config.xml` configuration tree "
             "parsed as JSON with all passwords, tokens, private keys, and secrets redacted server-side."
         ),
+        "properties": {},
+    },
+    {
+        "name": "omv_get_logs",
+        "section": "logs",
+        "description": (
+            "Read redacted OpenMediaVault system, daemon, S.M.A.R.T., NUT/UPS, SMB, NFS, NGINX, "
+            "omv-engined, or Read-Only API plugin logs for agentic troubleshooting."
+        ),
+        "properties": {
+            "logfile": {
+                "type": "string",
+                "description": (
+                    "Log source to query: 'roapi' (default, Read-Only API audit/error log), "
+                    "'syslog', 'daemon', 'messages', 'auth', 'smartd', 'smb', 'rsync', "
+                    "'nut' (nut-server/nut-monitor/nut-driver journal), 'engined' (openmediavault-engined journal), "
+                    "'nginx', or 'nfs'."
+                ),
+                "default": "roapi",
+            },
+            "limit": {
+                "type": "integer",
+                "description": "Maximum number of recent log entries to return (1-500, default 100).",
+                "minimum": 1,
+                "maximum": 500,
+                "default": 100,
+            },
+        },
+    },
+    {
+        "name": "omv_get_diagnostics",
+        "section": "diagnostics",
+        "description": (
+            "Agent self-diagnostic & feedback tool: returns plugin version/configuration state, "
+            "enabled vs. disabled read-only scopes, Infisical Universal Auth sync status & cache health, "
+            "live latency/health probes across OMV sub-RPC services, and recent Read-Only API log entries."
+        ),
+        "properties": {
+            "limit": {
+                "type": "integer",
+                "description": "Number of recent Read-Only API log entries to include (1-500, default 100).",
+                "minimum": 1,
+                "maximum": 500,
+                "default": 100,
+            }
+        },
     },
 ]
 
 SECTION_BY_TOOL = {t["name"]: t["section"] for t in TOOLS}
 
 
-def fetch_creds_via_infisical() -> Dict[str, str]:
+def fetch_creds_via_infisical() -> Dict[str, Any]:
     """
     Retrieve OMV_HOST and OMV_RO_API_TOKEN from environment variables or, if
     INFISICAL_PROJECT_ID is configured, via `infisical run` inside a child Python process.
@@ -111,9 +170,10 @@ def fetch_creds_via_infisical() -> Dict[str, str]:
     host = os.environ.get("OMV_HOST", "").strip()
     token = os.environ.get("OMV_RO_API_TOKEN", "").strip()
     if host and token:
-        return {"host": host, "token": token}
+        return {"host": host, "token": token, "source": "environment"}
 
     project_id = os.environ.get("INFISICAL_PROJECT_ID", "").strip()
+    infisical_err: Optional[str] = None
     if project_id:
         helper_code = (
             "import json, os, sys; "
@@ -142,29 +202,38 @@ def fetch_creds_via_infisical() -> Dict[str, str]:
                     token = data["token"].strip()
                 if data.get("host"):
                     host = data["host"].strip()
-        except Exception:
-            pass
+            else:
+                infisical_err = (proc.stderr or proc.stdout or f"exit code {proc.returncode}").strip()[:400]
+        except Exception as exc:
+            infisical_err = str(exc)
 
-    return {"host": host, "token": token}
+    return {
+        "host": host,
+        "token": token,
+        "source": "infisical" if project_id else "environment",
+        "infisical_error": infisical_err,
+    }
 
 
-def query_omv_ro_api(section: str) -> Dict[str, Any]:
+def query_omv_ro_api(section: str, extra_params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     creds = fetch_creds_via_infisical()
     host = creds.get("host", "")
     token = creds.get("token", "")
-    if not host:
+    if not host or not token:
         return {
-            "error": (
-                "OMV_HOST is not configured. Set OMV_HOST (e.g. 'http://192.168.1.50') "
-                "in your MCP environment or in Infisical."
-            )
-        }
-    if not token:
-        return {
-            "error": (
-                "OMV_RO_API_TOKEN is not configured. Set OMV_RO_API_TOKEN in your MCP environment "
-                "or configure INFISICAL_PROJECT_ID for Infisical runtime injection."
-            )
+            "error": "Missing OpenMediaVault Read-Only API credentials (OMV_HOST or OMV_RO_API_TOKEN).",
+            "_agent_troubleshooting_feedback": {
+                "failure_layer": "mcp_credentials",
+                "omv_host_present": bool(host),
+                "omv_ro_api_token_present": bool(token),
+                "credential_source": creds.get("source"),
+                "infisical_cli_error": creds.get("infisical_error"),
+                "remediation": (
+                    "Ensure OMV_HOST and OMV_RO_API_TOKEN are set in the environment or stored in Infisical "
+                    f"(env='{DEFAULT_INFISICAL_ENV}', path='{DEFAULT_INFISICAL_PATH}') and that `Save Changes` "
+                    "was clicked in the Infisical UI."
+                ),
+            },
         }
 
     if not host.startswith(("http://", "https://")):
@@ -173,14 +242,20 @@ def query_omv_ro_api(section: str) -> Dict[str, Any]:
         base_url = host.rstrip("/")
 
     rpc_url = f"{base_url}/rpc.php"
+    rpc_params: Dict[str, Any] = {
+        "section": section,
+        "token": token,
+    }
+    if extra_params:
+        for k in ("devicefile", "logfile", "limit"):
+            if k in extra_params and extra_params[k] is not None:
+                rpc_params[k] = extra_params[k]
+
     payload = json.dumps(
         {
             "service": "RoApiProxy",
             "method": "query",
-            "params": {
-                "section": section,
-                "token": token,
-            },
+            "params": rpc_params,
             "options": None,
         }
     ).encode("utf-8")
@@ -207,7 +282,14 @@ def query_omv_ro_api(section: str) -> Dict[str, Any]:
             raw = resp.read().decode("utf-8")
             parsed = json.loads(raw)
             if parsed.get("error"):
-                return {"error": parsed["error"], "endpoint": rpc_url}
+                err_obj = parsed["error"]
+                msg = err_obj.get("message", "") if isinstance(err_obj, dict) else str(err_obj)
+                code = err_obj.get("code") if isinstance(err_obj, dict) else None
+                return {
+                    "error": err_obj,
+                    "endpoint": rpc_url,
+                    "_agent_troubleshooting_feedback": classify_omv_error(code, msg, section),
+                }
             return parsed.get("response", parsed)
     except urllib.error.HTTPError as exc:
         body = ""
@@ -215,18 +297,88 @@ def query_omv_ro_api(section: str) -> Dict[str, Any]:
             body = exc.read().decode("utf-8", errors="replace")
         except Exception:
             pass
+        msg = body[:1000]
+        try:
+            parsed_err = json.loads(body)
+            if isinstance(parsed_err, dict) and parsed_err.get("error"):
+                e = parsed_err["error"]
+                msg = e.get("message", msg) if isinstance(e, dict) else str(e)
+        except Exception:
+            pass
         return {
             "error": f"HTTP {exc.code} from {rpc_url}",
-            "details": body[:1000],
+            "details": msg,
+            "_agent_troubleshooting_feedback": classify_omv_error(exc.code, msg, section),
         }
     except Exception as exc:
         return {
             "error": f"Failed to reach OpenMediaVault Read-Only API at {rpc_url}: {exc}",
-            "hint": (
-                "Verify `openmediavault-ro-api` is installed and enabled under "
-                "`Services -> Read-Only API` in the OMV Web UI."
+            "_agent_troubleshooting_feedback": {
+                "failure_layer": "network_connectivity",
+                "endpoint": rpc_url,
+                "exception": str(exc),
+                "remediation": (
+                    "Verify the OpenMediaVault host is reachable on the network, NGINX is running, "
+                    "and if executing inside a network-isolated sandbox, re-run with sandbox network access enabled."
+                ),
+            },
+        }
+
+
+def classify_omv_error(code: Any, message: str, section: str) -> Dict[str, Any]:
+    msg_lower = (message or "").lower()
+    if "rpc service 'roapiproxy' not found" in msg_lower or "service 'roapiproxy' not found" in msg_lower:
+        return {
+            "failure_layer": "plugin_not_installed",
+            "http_or_rpc_code": code,
+            "remediation": (
+                "The `openmediavault-ro-api` plugin is not installed on this OpenMediaVault host yet. "
+                "Upload and install `openmediavault-ro-api_1.0.0-1_all.deb` via `System -> Plugins -> Upload`."
             ),
         }
+    if code == 401 or "invalid read-only api token" in msg_lower:
+        return {
+            "failure_layer": "token_authentication",
+            "http_or_rpc_code": code,
+            "remediation": (
+                "The provided OMV_RO_API_TOKEN was rejected by OpenMediaVault. Check `Services -> Read-Only API` "
+                "in the OMV Web UI (or Infisical sync settings) and check `Diagnostics -> System Logs -> Logs -> Read-Only API`."
+            ),
+        }
+    if "client ip" in msg_lower and "not permitted" in msg_lower:
+        return {
+            "failure_layer": "ip_allowlist",
+            "http_or_rpc_code": code,
+            "remediation": (
+                "Your client IP is not in the `Allowed client IPs / subnets` list in `Services -> Read-Only API`. "
+                "Add your IP/subnet in the OMV Web UI."
+            ),
+        }
+    if "scope" in msg_lower and "disabled" in msg_lower:
+        return {
+            "failure_layer": "scope_disabled",
+            "requested_section": section,
+            "http_or_rpc_code": code,
+            "remediation": (
+                f"The '{section}' scope is currently unchecked in `Services -> Read-Only API` in the OMV Web UI. "
+                "Call `omv_get_diagnostics` to inspect `scope_permissions.enabled_scopes`."
+            ),
+        }
+    if "read-only api is disabled" in msg_lower:
+        return {
+            "failure_layer": "service_disabled",
+            "http_or_rpc_code": code,
+            "remediation": "Enable the plugin checkbox under `Services -> Read-Only API` in the OMV Web UI.",
+        }
+    return {
+        "failure_layer": "omv_rpc_error",
+        "requested_section": section,
+        "http_or_rpc_code": code,
+        "remediation": (
+            "Call `omv_get_diagnostics` and `omv_get_logs(logfile='roapi')` or `omv_get_logs(logfile='engined')` "
+            "to inspect detailed backend error logs."
+        ),
+    }
 
 
 def send_jsonrpc(msg: Dict[str, Any]) -> None:
@@ -265,7 +417,7 @@ def handle_request(req: Dict[str, Any]) -> None:
                 "description": t["description"],
                 "inputSchema": {
                     "type": "object",
-                    "properties": {},
+                    "properties": t.get("properties", {}),
                     "additionalProperties": False,
                 },
             }
@@ -277,6 +429,7 @@ def handle_request(req: Dict[str, Any]) -> None:
     if method == "tools/call":
         params = req.get("params", {})
         tool_name = params.get("name", "")
+        tool_args = params.get("arguments") or {}
         section = SECTION_BY_TOOL.get(tool_name)
         if not section:
             send_jsonrpc(
@@ -288,8 +441,8 @@ def handle_request(req: Dict[str, Any]) -> None:
             )
             return
 
-        result = query_omv_ro_api(section)
-        is_error = "error" in result and len(result) <= 3
+        result = query_omv_ro_api(section, tool_args if isinstance(tool_args, dict) else None)
+        is_error = "error" in result and "_agent_feedback" not in result
         send_jsonrpc(
             {
                 "jsonrpc": "2.0",

@@ -5,7 +5,7 @@ set -e
 . /usr/share/openmediavault/scripts/helper-functions
 
 remove_action() {
-	rm -f /run/openmediavault-ro-api.cache
+	rm -f /run/openmediavault-ro-api.cache /run/openmediavault-ro-api.status.json
 	dpkg-trigger update-workbench || :
 	dpkg-trigger restart-engined || :
 	if command -v omv-mkworkbench >/dev/null 2>&1; then

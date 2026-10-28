@@ -68,6 +68,14 @@
 					"type": "boolean",
 					"required": true
 				},
+				"allow_logs": {
+					"type": "boolean",
+					"required": true
+				},
+				"allow_diagnostics": {
+					"type": "boolean",
+					"required": true
+				},
 				"redactpatterns": {
 					"type": "string",
 					"required": true
@@ -137,6 +145,16 @@
 				},
 				"devicefile": {
 					"type": "string",
+					"required": false
+				},
+				"logfile": {
+					"type": "string",
+					"required": false
+				},
+				"limit": {
+					"type": "integer",
+					"minimum": 1,
+					"maximum": 500,
 					"required": false
 				},
 				"_client_ip": {

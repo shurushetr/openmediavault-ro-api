@@ -70,6 +70,14 @@
 			"type": "boolean",
 			"default": true
 		},
+		"allow_logs": {
+			"type": "boolean",
+			"default": true
+		},
+		"allow_diagnostics": {
+			"type": "boolean",
+			"default": true
+		},
 		"redactpatterns": {
 			"type": "string",
 			"default": "password,passwd,secret,token,apitoken,privatekey,passphrase,shadow,psk,key"

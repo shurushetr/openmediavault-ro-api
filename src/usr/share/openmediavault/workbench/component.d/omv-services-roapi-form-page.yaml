@@ -112,6 +112,16 @@ data:
         label: _("Redacted config.xml export")
         hint: _("Allow reading the parsed /etc/openmediavault/config.xml tree with all secret/password fields automatically masked (section=config_xml).")
         value: true
+      - type: checkbox
+        name: allow_logs
+        label: _("System & service logs (redacted)")
+        hint: _("Allow reading redacted system, daemon, S.M.A.R.T., NUT/UPS, SMB, and Read-Only API logs for troubleshooting (section=logs).")
+        value: true
+      - type: checkbox
+        name: allow_diagnostics
+        label: _("Agent self-diagnostics & feedback")
+        hint: _("Allow reading plugin health, enabled scope matrix, Infisical sync status, sub-RPC latency probes, and recent audit events (section=diagnostics).")
+        value: true
       - type: textInput
         name: redactpatterns
         label: _("Redacted key patterns")

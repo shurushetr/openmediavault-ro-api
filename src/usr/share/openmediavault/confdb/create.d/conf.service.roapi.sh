@@ -24,6 +24,8 @@ if ! omv_config_exists "/config/services/roapi"; then
 	omv_config_add_key "/config/services/roapi" "allow_network" "1"
 	omv_config_add_key "/config/services/roapi" "allow_apt" "1"
 	omv_config_add_key "/config/services/roapi" "allow_configxml" "1"
+	omv_config_add_key "/config/services/roapi" "allow_logs" "1"
+	omv_config_add_key "/config/services/roapi" "allow_diagnostics" "1"
 	omv_config_add_key "/config/services/roapi" "redactpatterns" "password,passwd,secret,token,apitoken,privatekey,passphrase,shadow,psk,key"
 	omv_config_add_key "/config/services/roapi" "infisicalenable" "0"
 	omv_config_add_key "/config/services/roapi" "infisicalurl" "https://app.infisical.com"
@@ -36,6 +38,13 @@ if ! omv_config_exists "/config/services/roapi"; then
 	omv_config_add_key "/config/services/roapi" "infisicalcachettl" "300"
 	omv_config_add_key "/config/services/roapi" "infisicalverifyssl" "1"
 	omv_config_add_key "/config/services/roapi" "infisicalfallback" "1"
+else
+	if ! omv_config_exists "/config/services/roapi/allow_logs"; then
+		omv_config_add_key "/config/services/roapi" "allow_logs" "1"
+	fi
+	if ! omv_config_exists "/config/services/roapi/allow_diagnostics"; then
+		omv_config_add_key "/config/services/roapi" "allow_diagnostics" "1"
+	fi
 fi
 
 exit 0

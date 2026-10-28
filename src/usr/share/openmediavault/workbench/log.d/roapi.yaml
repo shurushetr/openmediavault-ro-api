@@ -1,0 +1,32 @@
+version: "1.0"
+type: log
+data:
+  id: roapi
+  text: _("Read-Only API")
+  columns:
+    - name: _("Date & Time")
+      sortable: true
+      prop: ts
+      cellTemplateName: localeDateTime
+      flexGrow: 1
+    - name: _("Severity")
+      sortable: true
+      prop: level
+      flexGrow: 1
+    - name: _("Component")
+      sortable: true
+      prop: component
+      flexGrow: 1
+    - name: _("Client IP")
+      sortable: true
+      prop: client
+      flexGrow: 1
+    - name: _("Event / Diagnostic Detail")
+      sortable: true
+      prop: message
+      flexGrow: 3
+  request:
+    service: LogFile
+    method: getList
+    params:
+      id: roapi
