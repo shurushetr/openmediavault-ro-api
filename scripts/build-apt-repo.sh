@@ -44,7 +44,8 @@ EOF
 fi
 
 gpg --homedir "${GNUPG_DIR}" --batch --yes --export "openmediavault-ro-api" > "${REPO_OUT}/openmediavault-ro-api-keyring.gpg"
-gpg --homedir "${GNUPG_DIR}" --batch --yes --armor --export "openmediavault-ro-api" > "${REPO_OUT}/openmediavault-ro-api.asc"
+gpg --homedir "${GNUPG_DIR}" --batch --yes --armor --export "openmediavault-ro-api" \
+    | sed '2s/^$/./' > "${REPO_OUT}/openmediavault-ro-api.asc"
 
 # Generate Packages, Packages.gz, Release, InRelease, and Release.gpg for each OMV / Debian suite
 python3 - "${REPO_OUT}" "${POOL_REL}" << 'PYEOF'

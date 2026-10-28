@@ -45,7 +45,7 @@ By default, OpenMediaVault's web RPC gateway (`/rpc.php` -> `OMV\Rpc\Proxy\Json:
    - **GPG Key:** Paste the armored public key below (also in [`repo/openmediavault-ro-api.asc`](repo/openmediavault-ro-api.asc)):
      ```text
      -----BEGIN PGP PUBLIC KEY BLOCK-----
-
+     .
      mQGNBGrh+tUBDADSkSfVoscHWBl+VVYXAbXG17L6S7ZR+S7+v+UJuOERrKHJdwva
      pJI76L/FrnjcQS5GITnoOhZ3/aUGGiaHKq8kv3lo9yZcSeotCmYiwx+ki9UK3n0S
      kDeAcD8q5RLW9QqB1kGZN9vGkBS3rWu964H0tqEe4s0T9+wnWyoxNIo/KX0C9zaR
