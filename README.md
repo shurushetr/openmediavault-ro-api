@@ -30,35 +30,21 @@ By default, OpenMediaVault's web RPC gateway (`/rpc.php` -> `OMV\Rpc\Proxy\Json:
 
 ## Quick Start (3 Minutes)
 
-### Step 1: Install the Plugin in OpenMediaVault 7 / 8
+### Step 1: Install the Plugin in OpenMediaVault 7 / 8 (100% Web UI)
 
-Choose any of the three standard OpenMediaVault 7/8 installation methods below:
-
-#### Option A: 1-Line APT Repository Installer (`omv-extras` Style — Recommended)
-Run the repository bootstrap script via SSH (or once via **`System` -> `Scheduled Tasks`** as `root`). This installs the GPG keyring (`/usr/share/keyrings/openmediavault-ro-api-keyring.gpg`), registers the DEB822 APT source (`/etc/apt/sources.list.d/openmediavault-ro-api.sources`), and installs `openmediavault-ro-api` so future updates appear automatically in **`System` -> `Update Management`**:
-```bash
-wget -O - https://shurushetr.github.io/openmediavault-ro-api/install | sudo bash
-```
-
-#### Option B: 100% OMV Web UI via `openmediavault-apt` + `System` -> `Plugins`
-1. In the OpenMediaVault Web UI, go to **`System` -> `Plugins`**, ensure **`openmediavault-apt`** is installed, and apply changes if prompted.
-2. Go to **`System` -> `APT`** (Repositories) and click **`Create`** (`+`):
+1. In the OpenMediaVault Web UI, go to **`System` -> `Plugins`**, search for **`openmediavault-apt`**, install it if not already installed, and apply the yellow configuration banner.
+2. Go to **`System` -> `APT` -> `Repositories`** and click **`Create`** (`+`):
    - **URI / URL:** `https://shurushetr.github.io/openmediavault-ro-api`
    - **Distribution / Suites:** `sandworm`
    - **Components:** `main`
-   - **GPG Key:** Paste the contents of [`openmediavault-ro-api.asc`](https://shurushetr.github.io/openmediavault-ro-api/openmediavault-ro-api.asc)
-3. Save and apply the yellow configuration banner.
-4. Go to **`System` -> `Plugins`**, click **`Check for new plugins`** (`🔍`), select **`openmediavault-ro-api`**, and click **`Install`** (`⬇`).
+   - **GPG Key:** Paste the armored public key from [`openmediavault-ro-api.asc`](https://shurushetr.github.io/openmediavault-ro-api/openmediavault-ro-api.asc)
+3. Click **Save** and apply the yellow configuration banner.
+4. Go to **`System` -> `Plugins`**, click **`Check for new plugins`** (`🔍`), search for **`openmediavault-ro-api`**, select it, and click **`Install`** (`⬇`).
 
 <!-- SCREENSHOT 2 PLACEHOLDER -->
 <!--
 ![Installing openmediavault-ro-api in System -> Plugins](docs/images/02-omv-plugin-install.png)
 -->
-
-#### Option C: Direct `.deb` Package Install
-```bash
-curl -fsSL https://github.com/shurushetr/openmediavault-ro-api/releases/latest/download/openmediavault-ro-api_1.0.0-1_all.deb -o /tmp/openmediavault-ro-api.deb && sudo apt-get install -y /tmp/openmediavault-ro-api.deb
-```
 
 ---
 
