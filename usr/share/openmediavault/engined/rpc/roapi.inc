@@ -435,6 +435,7 @@ class OMVRpcServiceRoApi extends \OMV\Rpc\ServiceAbstract
             $details[$deviceFile] = [
                 "info" => $this->safeRpc("Smart", "getInformation", ["devicefile" => $deviceFile], $ctx),
                 "attributes" => $this->safeRpc("Smart", "getAttributes", ["devicefile" => $deviceFile], $ctx),
+                "extended_info" => $this->safeRpc("Smart", "getExtendedInformation", ["devicefile" => $deviceFile], $ctx),
                 "selftest_logs" => $this->safeRpc("Smart", "getSelfTestLogs", ["devicefile" => $deviceFile], $ctx),
             ];
         } elseif (is_array($disks) && !isset($disks['_error'])) {
@@ -454,6 +455,8 @@ class OMVRpcServiceRoApi extends \OMV\Rpc\ServiceAbstract
                     $details[$dev] = [
                         "info" => $this->safeRpc("Smart", "getInformation", ["devicefile" => $dev], $ctx),
                         "attributes" => $this->safeRpc("Smart", "getAttributes", ["devicefile" => $dev], $ctx),
+                        "extended_info" => $this->safeRpc("Smart", "getExtendedInformation", ["devicefile" => $dev], $ctx),
+                        "selftest_logs" => $this->safeRpc("Smart", "getSelfTestLogs", ["devicefile" => $dev], $ctx),
                     ];
                 }
             }
@@ -479,10 +482,26 @@ class OMVRpcServiceRoApi extends \OMV\Rpc\ServiceAbstract
                 $zpoolStatus = implode("\n", $out);
             }
         }
+        $mdArrays = null;
+        $mdDetails = [];
+        $mgr = \OMV\Rpc\ServiceManager::getInstance();
+        if (is_object($mgr->getService("MdMgmt"))) {
+            $mdArrays = $this->safeRpc("MdMgmt", "enumerateDevices", null, $ctx);
+            if (is_array($mdArrays) && !isset($mdArrays['_error'])) {
+                foreach ($mdArrays as $arr) {
+                    $arrDev = $arr['devicefile'] ?? '';
+                    if ($arrDev !== '') {
+                        $mdDetails[$arrDev] = $this->safeRpc("MdMgmt", "getDetail", ["devicefile" => $arrDev], $ctx);
+                    }
+                }
+            }
+        }
         return [
             "filesystems" => $this->safeRpc("FileSystemMgmt", "enumerateFilesystems", null, $ctx),
             "mounted_filesystems" => $this->safeRpc("FileSystemMgmt", "enumerateMountedFilesystems", ["includeroot" => true], $ctx),
             "fstab_entries" => $this->safeRpc("FsTab", "enumerateEntries", null, $ctx),
+            "md_raid_arrays" => $mdArrays,
+            "md_raid_details" => $mdDetails,
             "proc_mdstat" => $mdstat,
             "zpool_status" => $zpoolStatus,
         ];
