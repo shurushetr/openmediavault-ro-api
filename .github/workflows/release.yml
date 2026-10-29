@@ -64,8 +64,11 @@ jobs:
         run: |
           chmod +x build-deb.sh
           ./build-deb.sh dist
+          cp -f repo/openmediavault-ro-api.asc dist/
+          cp -f repo/openmediavault-ro-api-keyring.gpg dist/
+          cp -f mcp/omv-ro-mcp.py dist/
           cd dist
-          sha256sum *.deb > SHA256SUMS
+          sha256sum *.deb openmediavault-ro-api.asc openmediavault-ro-api-keyring.gpg omv-ro-mcp.py > SHA256SUMS
           cat SHA256SUMS
 
       - name: Upload .deb Artifact
@@ -74,13 +77,20 @@ jobs:
           name: openmediavault-ro-api-deb
           path: |
             dist/*.deb
+            dist/openmediavault-ro-api.asc
+            dist/openmediavault-ro-api-keyring.gpg
+            dist/omv-ro-mcp.py
             dist/SHA256SUMS
 
       - name: Publish GitHub Release on Tag
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
+          name: "openmediavault-ro-api ${{ github.ref_name }}"
           generate_release_notes: true
           files: |
             dist/*.deb
+            dist/openmediavault-ro-api.asc
+            dist/openmediavault-ro-api-keyring.gpg
+            dist/omv-ro-mcp.py
             dist/SHA256SUMS
