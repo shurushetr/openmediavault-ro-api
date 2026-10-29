@@ -26,7 +26,7 @@ jobs:
 
       - name: Validate JSON Datamodels
         run: |
-          for f in src/usr/share/openmediavault/datamodels/*.json; do
+          for f in usr/share/openmediavault/datamodels/*.json; do
             echo "Validating $f ..."
             jq empty "$f"
           done
@@ -35,7 +35,7 @@ jobs:
         run: |
           python3 -c '
           import glob, yaml
-          for f in glob.glob("src/usr/share/openmediavault/workbench/**/*.yaml", recursive=True):
+          for f in glob.glob("usr/share/openmediavault/workbench/**/*.yaml", recursive=True):
               print(f"Validating {f} ...")
               with open(f, "r", encoding="utf-8") as fh:
                   yaml.safe_load(fh)
@@ -43,16 +43,18 @@ jobs:
 
       - name: Lint Shell & Maintainer Scripts
         run: |
-          dash -n DEBIAN/postinst
-          dash -n DEBIAN/postrm
-          dash -n src/usr/share/openmediavault/confdb/create.d/conf.service.roapi.sh
+          bash -n debian/openmediavault-ro-api.postinst
+          bash -n debian/openmediavault-ro-api.postrm
+          dash -n usr/share/openmediavault/confdb/create.d/conf.service.roapi.sh
           bash -n build-deb.sh
+          bash -n scripts/build-apt-repo.sh
 
-      - name: Lint PHP RPC Services
+      - name: Lint PHP RPC & Endpoint Files
         run: |
-          php -l src/usr/share/openmediavault/engined/rpc/roapi.inc
-          php -l src/usr/share/openmediavault/engined/inc/90roapi-logfile.inc
-          php -l src/var/www/openmediavault/rpc/roapi.inc
+          php -l usr/share/openmediavault/engined/rpc/roapi.inc
+          php -l usr/share/openmediavault/engined/module/roapi.inc
+          php -l usr/share/openmediavault/engined/inc/90roapi-logfile.inc
+          php -l var/www/openmediavault/ro-api.php
 
       - name: Lint MCP Server Python Script
         run: |
