@@ -60,13 +60,15 @@ jobs:
         run: |
           PYTHONPYCACHEPREFIX=/tmp python3 -m py_compile mcp/omv-ro-mcp.py
 
-      - name: Build Debian Package (.deb)
+      - name: Build Debian Package (.deb) & Extract Release Notes
         run: |
           chmod +x build-deb.sh
           ./build-deb.sh dist
           cp -f repo/openmediavault-ro-api.asc dist/
           cp -f repo/openmediavault-ro-api-keyring.gpg dist/
           cp -f mcp/omv-ro-mcp.py dist/
+          awk 'NR==1 {print "### " $0 "\n"; next} /^ -- / {exit} /^openmediavault-ro-api/ {exit} NF {sub(/^  /, ""); print}' debian/changelog > dist/RELEASE_NOTES.md
+          cat dist/RELEASE_NOTES.md
           cd dist
           sha256sum *.deb openmediavault-ro-api.asc openmediavault-ro-api-keyring.gpg omv-ro-mcp.py > SHA256SUMS
           cat SHA256SUMS
@@ -80,6 +82,7 @@ jobs:
             dist/openmediavault-ro-api.asc
             dist/openmediavault-ro-api-keyring.gpg
             dist/omv-ro-mcp.py
+            dist/RELEASE_NOTES.md
             dist/SHA256SUMS
 
       - name: Publish GitHub Release on Tag
@@ -87,6 +90,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           name: "openmediavault-ro-api ${{ github.ref_name }}"
+          body_path: dist/RELEASE_NOTES.md
           generate_release_notes: true
           files: |
             dist/*.deb
